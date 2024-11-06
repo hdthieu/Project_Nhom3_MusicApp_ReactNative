@@ -1,5 +1,5 @@
 // App.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FlatList,
   View,
@@ -11,7 +11,34 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const Artists = () => {
+const Artists = ({ route }) => {
+   const { artist } = route.params;
+   console.log(artist)
+  const [artists, setArtists] = useState([]);
+  useEffect(() => {
+    const fetchSongs = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/songs');
+        const data = await response.json();
+        setSongs(data);
+      } catch (error) {
+        console.error('Error fetching songs:', error);
+      }
+    };
+
+    const fetchArtists = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/artists');
+        const data = await response.json();
+        setArtists(data);
+      } catch (error) {
+        console.error('Error fetching artists:', error);
+      }
+    };
+
+    fetchSongs();
+    fetchArtists();
+  }, []);
   const releaseData = [
     {
       image: require('../assets/artistYou.png'),
@@ -75,7 +102,7 @@ const Artists = () => {
       <View style={styles.header}>
         <Image
           style={styles.headerImage}
-          source={require('../assets/artistYou.png')}
+          source={{uri:artist.img}}
         />
         <View style={styles.headerContent}>
           <Icon name="arrow-back" size={24} color="#fff" />
@@ -100,7 +127,8 @@ const Artists = () => {
 
       <ScrollView style={{ flex: 8 }} showsHorizontalScrollIndicator={false}>
         <View style={styles.popularReleases}>
-          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+          <View
+            style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Text style={styles.sectionTitle}>Popular releases</Text>
             <TouchableOpacity>
               <Text style={styles.seeMore}>See more</Text>
@@ -127,7 +155,7 @@ const Artists = () => {
             )}
           />
         </View>
-        <View style={{ flex: 1.5, marginTop: "4%" }}>
+        <View style={{ flex: 1.5, marginTop: '4%' }}>
           <Text style={styles.title}>Artist Playlists</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {playlistData.map((playlist, index) => (
@@ -257,7 +285,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingVertical: 16,
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    flex:1
+    flex: 1,
   },
   navItem: {
     alignItems: 'center',
