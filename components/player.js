@@ -6,12 +6,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Button,
 } from 'react-native';
 import { Audio } from 'expo-av';
+import Slider from '@react-native-community/slider';
 
 const MusicPlayer = ({ route }) => {
   const [currentSound, setCurrentSound] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const { song } = route.params;
 
   useEffect(() => {
@@ -27,7 +30,7 @@ const MusicPlayer = ({ route }) => {
 
     fetchSongs();
 
-    // Hủy bỏ âm thanh khi component bị huỷ
+    // Clean up the sound when the component unmounts
     return () => {
       if (currentSound) {
         currentSound.unloadAsync();
@@ -35,21 +38,35 @@ const MusicPlayer = ({ route }) => {
     };
   }, []);
 
-  const playAudio = async (songId) => {
+  const playAudio = async () => {
     try {
-      // URL của file âm thanh
-      const audioUrl = "http://localhost:3000/audio/${songId}";
-
-      // Nếu có âm thanh đang phát thì dừng nó
       if (currentSound) {
-        await currentSound.stopAsync();
-        await currentSound.unloadAsync();
-      }
+        // Toggle play/pause if sound already exists
+        const status = await currentSound.getStatusAsync();
+        if (status.isPlaying) {
+          await currentSound.pauseAsync();
+          setIsPlaying(false);
+        } else {
+          await currentSound.playAsync();
+          setIsPlaying(true);
+        }
+      } else {
+        // Load and play the sound if it hasn't been loaded yet
+        const audioUrl = `http://localhost:3000/audio/${song.id}`;
+        const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
+        setCurrentSound(sound);
 
-      // Tạo âm thanh mới từ URL và phát
-      const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
-      setCurrentSound(sound);
-      await sound.playAsync();
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded) {
+            setCurrentTime(status.positionMillis);
+            setDuration(status.durationMillis);
+            setIsPlaying(status.isPlaying);
+          }
+        });
+
+        await sound.playAsync();
+        setIsPlaying(true);
+      }
     } catch (error) {
       console.error('Error playing sound:', error);
     }
@@ -57,18 +74,24 @@ const MusicPlayer = ({ route }) => {
 
   const stopAudio = async () => {
     if (currentSound) {
-      await currentSound.stopAsync();
-      await currentSound.unloadAsync();
-      setCurrentSound(null);
+      await currentSound.pauseAsync(); // Only pause, don't unload or reset time
+      setIsPlaying(false);
     }
   };
 
   const handleSongPress = () => {
-    if (currentSound) { stopAudio();
-     
+    if (isPlaying) {
+      stopAudio();
     } else {
-      playAudio(song.id);
+      playAudio();
     }
+  };
+
+  const formatTime = (millis) => {
+    if (!millis || millis <= 0) return '0:00';
+    const minutes = Math.floor(millis / 60000);
+    const seconds = ((millis % 60000) / 1000).toFixed(0);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
   return (
@@ -93,46 +116,46 @@ const MusicPlayer = ({ route }) => {
 
         {/* Song Info */}
         <View style={styles.songInfo}>
-          <View style={{ flex: 2 }}>
-            <Text style={styles.songTitle}>{song.title}</Text>
-            <Text style={styles.songArtist}>
-              {song.artist ? song.artist.name : <Text>Unknown Artist</Text>}
-            </Text>
-          </View>
-          <View
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-            }}>
-            <Image source={require('../assets/iconTim.png')} />
-            <Image source={require('../assets/icondownload.png')} />
-            <Image source={require('../assets/iconshare.png')} />
-          </View>
+          <Text style={styles.songTitle}>{song.title}</Text>
+          <Text style={styles.songArtist}>
+            {song.artist ? song.artist.name : 'Unknown Artist'}
+          </Text>
+        </View>
+
+        {/* Progress Bar */}
+        <View style={styles.progressBarContainer}>
+          <Text style={styles.currentTime}>{formatTime(currentTime)}</Text>
+          <Slider
+            style={styles.progressBar}
+            minimumValue={0}
+            maximumValue={duration}
+            value={currentTime}
+            minimumTrackTintColor="#FFFFFF"
+            maximumTrackTintColor="#888888"
+            thumbTintColor="#FFFFFF"
+            onValueChange={(value) => {
+              if (currentSound) {
+                currentSound.setPositionAsync(value);
+              }
+            }}
+          />
+          <Text style={styles.duration}>{formatTime(duration)}</Text>
         </View>
 
         {/* Controls */}
         <View style={styles.controls}>
           <Text style={styles.controlIcon}>⏮</Text>
-          <View style={{ flexDirection: 'row', marginTop: 10 }}>
-            <TouchableOpacity onPress={handleSongPress}>
-              <Image
-                source={
-                  currentSound
-                    ? require('../assets/stopArrow.png') 
-                    : require('../assets/playArrow.png')
-                }
-                style={styles.playButtonIcon}
-              />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity onPress={handleSongPress}>
+            <Image
+              source={
+                isPlaying
+                  ? require('../assets/stopArrow.png')
+                  : require('../assets/playArrow.png')
+              }
+              style={styles.playButtonIcon}
+            />
+          </TouchableOpacity>
           <Text style={styles.controlIcon}>⏭</Text>
-        </View>
-
-        {/* Current Time and Duration */}
-        <View style={styles.timeInfo}>
-          <Text style={styles.currentTime}>0:25</Text>
-          <Text style={styles.duration}>3:15</Text>
         </View>
       </ScrollView>
     </View>
@@ -174,7 +197,6 @@ const styles = StyleSheet.create({
   songInfo: {
     alignItems: 'center',
     marginVertical: 16,
-    flexDirection: 'row',
   },
   songTitle: {
     color: 'rgba(255, 255, 255, 0.8)',
@@ -185,6 +207,22 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.5)',
     fontSize: 16,
   },
+  progressBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 16,
+  },
+  progressBar: {
+    flex: 1,
+    marginHorizontal: 10,
+  },
+  currentTime: {
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  duration: {
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
   controls: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -194,21 +232,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: 'white',
   },
-  timeInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  currentTime: {
-    color: 'rgba(255, 255, 255, 0.5)',
-  },
-  duration: {
-    color: 'rgba(255, 255, 255, 0.5)',
-  },
   playButtonIcon: {
     borderRadius: 70,
     width: 40,
-    height: 40
-  }
+    height: 40,
+  },
 });
 
 export default MusicPlayer;
