@@ -38,7 +38,7 @@ const MusicPlayer = ({ route }) => {
   const playAudio = async (songId) => {
     try {
       // URL của file âm thanh
-      const audioUrl = `http://localhost:3000/audio/${songId}`;
+      const audioUrl = "http://localhost:3000/audio/${songId}";
 
       // Nếu có âm thanh đang phát thì dừng nó
       if (currentSound) {
