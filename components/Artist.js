@@ -10,11 +10,14 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
 
 const Artists = ({ route }) => {
-   const { artist } = route.params;
-   console.log(artist)
+  const navigation = useNavigation();
+  const { artist } = route.params;
   const [artists, setArtists] = useState([]);
+  const [songs, setSongs] = useState([]);
+
   useEffect(() => {
     const fetchSongs = async () => {
       try {
@@ -39,48 +42,6 @@ const Artists = ({ route }) => {
     fetchSongs();
     fetchArtists();
   }, []);
-  const releaseData = [
-    {
-      image: require('../assets/artistYou.png'),
-      song: 'Misery',
-      album: 'Maroon 5 - Misery',
-    },
-    {
-      image: require('../assets/artistYou.png'),
-      song: 'Payphone',
-      album: 'Maroon 5 - Overexposed',
-    },
-    {
-      image: require('../assets/artistYou.png'),
-      song: 'Animals',
-      album: 'Maroon 5 - V',
-    },
-    {
-      image: require('../assets/artistYou.png'),
-      song: 'Sugar',
-      album: 'Maroon 5 - Singles',
-    },
-    {
-      image: require('../assets/artistYou.png'),
-      song: 'The Sun',
-      album: 'Maroon 5 - Songs About Jane',
-    },
-    {
-      image: require('../assets/artistYou.png'),
-      song: 'What Lovers Do',
-      album: 'Maroon 5 - Red Pill Blues Deluxe',
-    },
-    {
-      image: require('../assets/artistYou.png'),
-      song: 'The Sun',
-      album: 'Maroon 5 - Songs About Jane',
-    },
-    {
-      image: require('../assets/artistYou.png'),
-      song: 'What Lovers Do',
-      album: 'Maroon 5 - Red Pill Blues Deluxe',
-    },
-  ];
 
   const playlistData = [
     {
@@ -97,16 +58,32 @@ const Artists = ({ route }) => {
     },
     // Add more playlists as needed
   ];
+  const currentArtistId = artist.id;
+  const filteredSongs = songs.filter(
+    (song) => song.artistId === currentArtistId
+  );
+  const handleSongPress = (song) => {
+    const artist = artists.find((artist) => artist.id === song.artistId);
+    const songWithArtist = {
+      ...song,
+      artist: artist
+        ? {
+            name: artist.name,
+            bio: artist.bio,
+            img: artist.img,
+          }
+        : null,
+    };
+    // Điều hướng sang MusicPlayer và truyền songWithArtist
+    navigation.navigate('MusicPlayer', { song: songWithArtist });
+  };
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image
-          style={styles.headerImage}
-          source={{uri:artist.img}}
-        />
+        <Image style={styles.headerImage} source={{ uri: artist.img }} />
         <View style={styles.headerContent}>
           <Icon name="arrow-back" size={24} color="#fff" />
-          <Text style={styles.artistName}>MAROON 5</Text>
+          <Text style={styles.artistName}>{artist.name}</Text>
           <Text style={styles.artistType}>Artist</Text>
         </View>
       </View>
@@ -137,34 +114,27 @@ const Artists = ({ route }) => {
 
           <FlatList
             showsHorizontalScrollIndicator={false}
-            data={releaseData}
-            renderItem={({ item }) => (
-              <View style={styles.releaseItem}>
-                <Image source={item.image} style={styles.albumCover} />
-                <View>
-                  <Text style={styles.releaseTitle}>{item.song}</Text>
-                  <Text style={styles.releaseAlbum}>{item.album}</Text>
-                </View>
-                <Icon
-                  name="more-vert"
-                  size={24}
-                  color="#fff"
-                  style={styles.moreOptions}
-                />
-              </View>
-            )}
+            data={filteredSongs}
+            renderItem={({ item }) => {
+              return (
+                <TouchableOpacity
+                  style={styles.releaseItem}
+                  onPress={() => handleSongPress(item)}>
+                  <Image source={item.image} style={styles.albumCover} />
+                  <View>
+                    <Text style={styles.releaseTitle}>{item.title}</Text>
+                    <Text style={styles.releaseAlbum}>{item.album}</Text>
+                  </View>
+                  <Icon
+                    name="more-vert"
+                    size={24}
+                    color="#fff"
+                    style={styles.moreOptions}
+                  />
+                </TouchableOpacity>
+              );
+            }}
           />
-        </View>
-        <View style={{ flex: 1.5, marginTop: '4%' }}>
-          <Text style={styles.title}>Artist Playlists</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {playlistData.map((playlist, index) => (
-              <View key={index} style={styles.playlist}>
-                <Image source={playlist.image} style={styles.cover} />
-                <Text style={styles.name}>{playlist.name}</Text>
-              </View>
-            ))}
-          </ScrollView>
         </View>
       </ScrollView>
       <View style={styles.navBar}>
@@ -297,29 +267,6 @@ const styles = StyleSheet.create({
   },
   activeNavText: {
     color: '#fff',
-  },
-
-  title: {
-    color: '#ffffffbf',
-    fontSize: 24,
-    fontWeight: '500',
-    marginLeft: 24,
-    marginBottom: 16,
-  },
-  playlist: {
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  cover: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  name: {
-    color: '#ffffffbf',
-    fontSize: 12,
-    textAlign: 'center',
   },
 });
 

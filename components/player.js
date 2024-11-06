@@ -15,6 +15,7 @@ const MusicPlayer = ({ route }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isFullScreen, setIsFullScreen] = useState(true); // State để điều khiển chế độ full screen và mini player
   const { song } = route.params;
 
   useEffect(() => {
@@ -30,7 +31,6 @@ const MusicPlayer = ({ route }) => {
 
     fetchSongs();
 
-    // Clean up the sound when the component unmounts
     return () => {
       if (currentSound) {
         currentSound.unloadAsync();
@@ -41,7 +41,6 @@ const MusicPlayer = ({ route }) => {
   const playAudio = async () => {
     try {
       if (currentSound) {
-        // Toggle play/pause if sound already exists
         const status = await currentSound.getStatusAsync();
         if (status.isPlaying) {
           await currentSound.pauseAsync();
@@ -51,7 +50,6 @@ const MusicPlayer = ({ route }) => {
           setIsPlaying(true);
         }
       } else {
-        // Load and play the sound if it hasn't been loaded yet
         const audioUrl = `http://localhost:3000/audio/${song.id}`;
         const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
         setCurrentSound(sound);
@@ -74,7 +72,7 @@ const MusicPlayer = ({ route }) => {
 
   const stopAudio = async () => {
     if (currentSound) {
-      await currentSound.pauseAsync(); // Only pause, don't unload or reset time
+      await currentSound.pauseAsync();
       setIsPlaying(false);
     }
   };
@@ -94,70 +92,91 @@ const MusicPlayer = ({ route }) => {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
+  const toggleFullScreen = () => {
+    setIsFullScreen(!isFullScreen);
+  };
+
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.topBar}>
-          <Image
-            source={require('../assets/iconDropdown.png')}
-            style={styles.icon}
-          />
-          <Text style={styles.time}>12:00</Text>
-          <Image
-            source={require('../assets/iconBaCham.png')}
-            style={styles.icon}
-          />
-        </View>
+      {isFullScreen ? (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Nút để thu nhỏ giao diện */}
+          <TouchableOpacity onPress={toggleFullScreen} style={styles.topBar}>
+            <Image source={require('../assets/iconDropdown.png')} style={styles.icon} />
+            <Text style={styles.time}>12:00</Text>
+            <Image source={require('../assets/iconBaCham.png')} style={styles.icon} />
+          </TouchableOpacity>
 
-        {/* Album Art and Title */}
-        <View style={styles.albumContainer}>
-          <Image source={{ uri: song.image }} style={styles.albumArt} />
-        </View>
+          {/* Album Art và Thông tin bài hát */}
+          <View style={styles.albumContainer}>
+            <Image source={{ uri: song.image }} style={styles.albumArt} />
+          </View>
 
-        {/* Song Info */}
-        <View style={styles.songInfo}>
-          <Text style={styles.songTitle}>{song.title}</Text>
-          <Text style={styles.songArtist}>
-            {song.artist ? song.artist.name : 'Unknown Artist'}
-          </Text>
-        </View>
+          <View style={styles.songInfo}>
+            <Text style={styles.songTitle}>{song.title}</Text>
+            <Text style={styles.songArtist}>
+              {song.artist ? song.artist.name : 'Unknown Artist'}
+            </Text>
+          </View>
 
-        {/* Progress Bar */}
-        <View style={styles.progressBarContainer}>
-          <Text style={styles.currentTime}>{formatTime(currentTime)}</Text>
-          <Slider
-            style={styles.progressBar}
-            minimumValue={0}
-            maximumValue={duration}
-            value={currentTime}
-            minimumTrackTintColor="#FFFFFF"
-            maximumTrackTintColor="#888888"
-            thumbTintColor="#FFFFFF"
-            onValueChange={(value) => {
-              if (currentSound) {
-                currentSound.setPositionAsync(value);
-              }
-            }}
-          />
-          <Text style={styles.duration}>{formatTime(duration)}</Text>
-        </View>
+          {/* Thanh tiến trình */}
+          <View style={styles.progressBarContainer}>
+            <Text style={styles.currentTime}>{formatTime(currentTime)}</Text>
+            <Slider
+              style={styles.progressBar}
+              minimumValue={0}
+              maximumValue={duration}
+              value={currentTime}
+              minimumTrackTintColor="#FFFFFF"
+              maximumTrackTintColor="#888888"
+              thumbTintColor="#FFFFFF"
+              onValueChange={(value) => {
+                if (currentSound) {
+                  currentSound.setPositionAsync(value);
+                }
+              }}
+            />
+            <Text style={styles.duration}>{formatTime(duration)}</Text>
+          </View>
 
-        {/* Controls */}
-        <View style={styles.controls}>
-          <Text style={styles.controlIcon}>⏮</Text>
+          {/* Nút điều khiển */}
+          <View style={styles.controls}>
+            <TouchableOpacity>
+              <Image style={styles.buttonIcon2} source={require('../assets/TronBai.png')} />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Image style={styles.buttonIconskip} source={require('../assets/skip-back-forward.png')} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleSongPress}>
+              <Image
+                source={isPlaying ? require('../assets/stopArrow.png') : require('../assets/playArrow.png')}
+                style={styles.playButtonIcon}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Image style={styles.buttonIconskip} source={require('../assets/skip-forward.png')} />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Image style={styles.buttonIcon2} source={require('../assets/repeat.png')} />
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      ) : (
+        // Mini Player hiển thị ở dưới cùng màn hình
+        <TouchableOpacity onPress={toggleFullScreen} style={styles.miniPlayer}>
+          <Image source={{ uri: song.image }} style={styles.miniAlbumArt} />
+          <View style={styles.miniInfo}>
+            <Text style={styles.miniSongTitle}>{song.title}</Text>
+            <Text style={styles.miniSongArtist}>{song.artist ? song.artist.name : 'Unknown Artist'}</Text>
+          </View>
           <TouchableOpacity onPress={handleSongPress}>
             <Image
-              source={
-                isPlaying
-                  ? require('../assets/stopArrow.png')
-                  : require('../assets/playArrow.png')
-              }
-              style={styles.playButtonIcon}
+              source={isPlaying ? require('../assets/stopArrow.png') : require('../assets/playArrow.png')}
+              style={styles.miniPlayButtonIcon}
             />
           </TouchableOpacity>
-          <Text style={styles.controlIcon}>⏭</Text>
-        </View>
-      </ScrollView>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -174,12 +193,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 32,
     backgroundColor: '#0000001f',
-  },
-  time: {
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontSize: 14,
-    fontWeight: '500',
-    fontFamily: 'Roboto',
   },
   icon: {
     width: 15,
@@ -227,15 +240,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginVertical: 16,
-  },
-  controlIcon: {
-    fontSize: 24,
-    color: 'white',
+    alignItems: 'center',
   },
   playButtonIcon: {
     borderRadius: 70,
     width: 40,
     height: 40,
+  },
+  buttonIconskip: {
+    borderRadius: 70,
+    width: 30,
+    height: 30,
+  },
+  buttonIcon2: {
+    borderRadius: 70,
+    width: 20,
+    height: 20,
+  },
+  miniPlayer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#333',
+    padding: 8,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  miniAlbumArt: {
+    width: 40,
+    height: 40,
+    borderRadius: 4,
+  },
+  miniInfo: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  miniSongTitle: {
+    color: '#FFF',
+    fontSize: 16,
+  },
+  miniSongArtist: {
+    color: '#AAA',
+    fontSize: 12,
+  },
+  miniPlayButtonIcon: {
+    width: 24,
+    height: 24,
   },
 });
 

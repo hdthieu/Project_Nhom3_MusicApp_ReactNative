@@ -21,7 +21,6 @@ export default function HomePlayer() {
         const response = await fetch('http://localhost:3000/artists');
         const data = await response.json();
         setArtists(data);
-        console.log(artists);
       } catch (error) {
         console.error('Error fetching artists:', error);
       }
@@ -40,7 +39,6 @@ export default function HomePlayer() {
           }
         : null,
     };
-    console.log(songWithArtist)
     navigation.navigate('Artist', { artist: songWithArtist });
   };
   const type = [
@@ -200,7 +198,33 @@ export default function HomePlayer() {
                 )}
               />
             </View>
-
+            <View style={{ marginTop: 10 }}>
+              <Text style={[styles.styleChungTxt, { fontSize: 28 }]}>
+                Artist
+              </Text>
+              <FlatList
+                data={artists}
+                horizontal
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => handleArtistPress(item)}
+                    style={{ marginHorizontal: 0, marginTop: 10 }}>
+                    <Image
+                      source={{ uri: item.img }}
+                      style={{ width: 120, height: 120, borderRadius: 5 }}
+                    />
+                    <Text
+                      style={[
+                        styles.styleChungTxt,
+                        { fontSize: 14, color: 'white', width: 150 },
+                      ]}>
+                      {item.name}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
             {/* Recently Played Section */}
             <View style={{ marginTop: 10 }}>
               <Text style={[styles.styleChungTxt, { fontSize: 28 }]}>
@@ -256,46 +280,25 @@ export default function HomePlayer() {
                 data={dataArtisYou}
                 horizontal
                 showsVerticalScrollIndicator={false}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={{ marginHorizontal: 0, marginTop: 10 }}>
-                    <Image source={item.img} />
-                    <Text
-                      style={[
-                        styles.styleChungTxt,
-                        { fontSize: 14, color: 'white', width: 150 },
-                      ]}>
-                      {item.name}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-            <View style={{ marginTop: 10 }}>
-              <Text style={[styles.styleChungTxt, { fontSize: 28 }]}>
-                Artist
-              </Text>
-              <FlatList
-                data={artists}
-                horizontal
-                showsVerticalScrollIndicator={false}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    onPress={() => handleArtistPress(item)}
-                    style={{ marginHorizontal: 0, marginTop: 10 }}>
-                    <Image
-                      source={{ uri: item.img }}
-                      style={{ width: 120, height: 120, borderRadius: 5 }}
-                    />
-                    <Text
-                      style={[
-                        styles.styleChungTxt,
-                        { fontSize: 14, color: 'white', width: 150 },
-                      ]}>
-                      {item.name}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                renderItem={({ item }) => {
+                  const artist = artists.find(
+                    (artist) => artist.id === item.artistId
+                  );
+                  return (
+                    <TouchableOpacity
+                      onPress={() => handleSongPress(item)}
+                      style={{ marginHorizontal: 0, marginTop: 10 }}>
+                      <Image source={item.img} />
+                      <Text
+                        style={[
+                          styles.styleChungTxt,
+                          { fontSize: 14, color: 'white', width: 150 },
+                        ]}>
+                        {item.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                }}
               />
             </View>
           </ScrollView>
