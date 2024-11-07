@@ -94,7 +94,7 @@ const NavigationBar = () => (
 );
 
 // Main Component
-const App = () => {
+const PageLikedSong = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -223,4 +223,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default App;
+export default PageLikedSong;

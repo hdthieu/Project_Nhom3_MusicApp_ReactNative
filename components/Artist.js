@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
-
+import IPConfig from './IPConfig';
+const { baseUrl } = IPConfig();
 const Artists = ({ route }) => {
   const navigation = useNavigation();
   const { artist } = route.params;
@@ -21,17 +22,18 @@ const Artists = ({ route }) => {
   useEffect(() => {
     const fetchSongs = async () => {
       try {
-        const response = await fetch('http://localhost:3000/songs');
+        const response = await fetch(`${baseUrl}/songs`);
         const data = await response.json();
         setSongs(data);
       } catch (error) {
         console.error('Error fetching songs:', error);
+        console.log("1")
       }
     };
 
     const fetchArtists = async () => {
       try {
-        const response = await fetch('http://localhost:3000/artists');
+        const response = await fetch(`${baseUrl}/artists`);
         const data = await response.json();
         setArtists(data);
       } catch (error) {
@@ -120,7 +122,7 @@ const Artists = ({ route }) => {
                 <TouchableOpacity
                   style={styles.releaseItem}
                   onPress={() => handleSongPress(item)}>
-                  <Image source={item.image} style={styles.albumCover} />
+                  <Image source={{uri: item.image}} style={styles.albumCover} />
                   <View>
                     <Text style={styles.releaseTitle}>{item.title}</Text>
                     <Text style={styles.releaseAlbum}>{item.album}</Text>

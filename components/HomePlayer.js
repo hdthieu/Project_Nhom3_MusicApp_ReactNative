@@ -10,23 +10,26 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import IPConfig from './IPConfig';
 
 export default function HomePlayer() {
+  const { baseUrl } = IPConfig();
   const navigation = useNavigation();
   const [artists, setArtists] = useState([]);
 
   useEffect(() => {
     const fetchArtists = async () => {
       try {
-        const response = await fetch('http://localhost:3000/artists');
+        const response = await fetch(`${baseUrl}/artists`);
         const data = await response.json();
         setArtists(data);
+        console.log(data)
       } catch (error) {
-        console.error('Error fetching artists:', error);
+        console.error('Error fetching artists 1:', error);
       }
     };
     fetchArtists();
-  }, []);
+  }, [baseUrl]);
   const handleArtistPress = (song) => {
     const artist = artists.find((artist) => artist.id === song.artistId);
     const songWithArtist = {

@@ -9,23 +9,28 @@ import {
 } from 'react-native';
 import { Audio } from 'expo-av';
 import Slider from '@react-native-community/slider';
+import IPConfig from './IPConfig';
 
 const MusicPlayer = ({ route }) => {
+  const { baseUrl } = IPConfig();
   const [currentSound, setCurrentSound] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isFullScreen, setIsFullScreen] = useState(true); // State để điều khiển chế độ full screen và mini player
+  const [isFullScreen, setIsFullScreen] = useState(true);
+  const [songs, setSongs] = useState([]);
   const { song } = route.params;
 
   useEffect(() => {
     const fetchSongs = async () => {
       try {
-        const response = await fetch('http://localhost:3000/songs');
+        const response = await fetch(`${baseUrl}/songs`);
         const data = await response.json();
         setSongs(data);
+        console.log(data);
       } catch (error) {
         console.error('Error fetching songs:', error);
+        console.log('2');
       }
     };
 
@@ -36,7 +41,7 @@ const MusicPlayer = ({ route }) => {
         currentSound.unloadAsync();
       }
     };
-  }, []);
+  }, [baseUrl]);
 
   const playAudio = async () => {
     try {
@@ -50,7 +55,7 @@ const MusicPlayer = ({ route }) => {
           setIsPlaying(true);
         }
       } else {
-        const audioUrl = `http://localhost:3000/audio/${song.id}`;
+        const audioUrl = `${baseUrl}/audio/${song.id}`;
         const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
         setCurrentSound(sound);
 
@@ -102,9 +107,15 @@ const MusicPlayer = ({ route }) => {
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Nút để thu nhỏ giao diện */}
           <TouchableOpacity onPress={toggleFullScreen} style={styles.topBar}>
-            <Image source={require('../assets/iconDropdown.png')} style={styles.icon} />
+            <Image
+              source={require('../assets/iconDropdown.png')}
+              style={styles.icon}
+            />
             <Text style={styles.time}>12:00</Text>
-            <Image source={require('../assets/iconBaCham.png')} style={styles.icon} />
+            <Image
+              source={require('../assets/iconBaCham.png')}
+              style={styles.icon}
+            />
           </TouchableOpacity>
 
           {/* Album Art và Thông tin bài hát */}
@@ -142,22 +153,38 @@ const MusicPlayer = ({ route }) => {
           {/* Nút điều khiển */}
           <View style={styles.controls}>
             <TouchableOpacity>
-              <Image style={styles.buttonIcon2} source={require('../assets/TronBai.png')} />
+              <Image
+                style={styles.buttonIcon2}
+                source={require('../assets/TronBai.png')}
+              />
             </TouchableOpacity>
             <TouchableOpacity>
-              <Image style={styles.buttonIconskip} source={require('../assets/skip-back-forward.png')} />
+              <Image
+                style={styles.buttonIconskip}
+                source={require('../assets/skip-back-forward.png')}
+              />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleSongPress}>
               <Image
-                source={isPlaying ? require('../assets/stopArrow.png') : require('../assets/playArrow.png')}
+                source={
+                  isPlaying
+                    ? require('../assets/stopArrow.png')
+                    : require('../assets/playArrow.png')
+                }
                 style={styles.playButtonIcon}
               />
             </TouchableOpacity>
             <TouchableOpacity>
-              <Image style={styles.buttonIconskip} source={require('../assets/skip-forward.png')} />
+              <Image
+                style={styles.buttonIconskip}
+                source={require('../assets/skip-forward.png')}
+              />
             </TouchableOpacity>
             <TouchableOpacity>
-              <Image style={styles.buttonIcon2} source={require('../assets/repeat.png')} />
+              <Image
+                style={styles.buttonIcon2}
+                source={require('../assets/repeat.png')}
+              />
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -167,11 +194,17 @@ const MusicPlayer = ({ route }) => {
           <Image source={{ uri: song.image }} style={styles.miniAlbumArt} />
           <View style={styles.miniInfo}>
             <Text style={styles.miniSongTitle}>{song.title}</Text>
-            <Text style={styles.miniSongArtist}>{song.artist ? song.artist.name : 'Unknown Artist'}</Text>
+            <Text style={styles.miniSongArtist}>
+              {song.artist ? song.artist.name : 'Unknown Artist'}
+            </Text>
           </View>
           <TouchableOpacity onPress={handleSongPress}>
             <Image
-              source={isPlaying ? require('../assets/stopArrow.png') : require('../assets/playArrow.png')}
+              source={
+                isPlaying
+                  ? require('../assets/stopArrow.png')
+                  : require('../assets/playArrow.png')
+              }
               style={styles.miniPlayButtonIcon}
             />
           </TouchableOpacity>

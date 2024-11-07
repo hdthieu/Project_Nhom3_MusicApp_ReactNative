@@ -12,7 +12,33 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 const Stack = createNativeStackNavigator();
 const App = () => {
-  return <PagePlaylist />;
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="HomePlayer">
+        <Stack.Screen
+          name="HomePlayer"
+          component={HomePlayer}
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="Artist"
+          component={Artist}
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="MusicPlayer"
+          component={Player}
+          options={{
+            headerShown: false,
+          }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 };
 
 export default App;

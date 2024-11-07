@@ -9,7 +9,10 @@ const app = express();
 const PORT = 3000;
 
 // Sử dụng CORS để cho phép kết nối từ ứng dụng React Native
-app.use(cors());
+app.use(cors({
+  origin: '*',
+}));
+
 
 // Endpoint để lấy danh sách album
 app.get('/albums', (req, res) => {
@@ -40,6 +43,6 @@ app.get('/audio/:songId', (req, res) => {
 });
 
 // Khởi động server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on http://192.168.1.12:${PORT}`);
 });
