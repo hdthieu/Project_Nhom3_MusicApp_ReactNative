@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1",
+    "username": "john_doe",
+    "email": "john@example.com",
+    "phone": "0337850724",
+    "profile": {
+      "displayName": "John Doe",
+      "avatar": "https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes.png",
+      "playlists": [
+        "1",
+        "2"
+      ]
+    },
+    "balance": 20000
+  }
+]

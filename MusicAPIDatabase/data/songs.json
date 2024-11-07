@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1",
+    "title": "Nơi này có anh",
+    "artistId": "2",
+    "album": "1",
+    "duration": 210,
+    "isPaid": false,
+    "url": "/audio/NoiNayCoAnh.mp3",
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPg-NIVC_cBrwX73i9TEMYC-UETUKYMlgEcA&s",
+    "liked": true,
+    "downloaded": false,
+    "fee":0
+
+  },
+  {
+    "id": "2",
+    "title": "Hơn Cả Yêu",
+    "artistId": "3",
+    "album": "3",
+    "duration": 210,
+    "isPaid": false,
+    "url": "/audio/HonCaYeu.mp3",
+    "image": "https://photo-resize-zmp3.zadn.vn/w600_r1x1_jpeg/cover/a/9/e/d/a9ed142c215560ab45f6b2b433907f90.jpg",
+    "liked":false,
+    "downloaded": false,
+    "fee": 10000
+  },
+  {
+    "id": "3",
+    "title": "Đừng Hỏi Em",
+    "artistId": "1",
+    "album": "3",
+    "duration": 210,
+    "isPaid": false,
+    "url": "/audio/DungHoiEm.mp3",
+    "image": "https://i.ytimg.com/vi/qBPFxyYli2E/maxresdefault.jpg",
+    "liked":true,
+    "downloaded": false,
+    "fee": 20000
+  }
+]
