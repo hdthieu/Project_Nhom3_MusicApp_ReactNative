@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TextInput, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Image,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 
 // Sample data for playlists
 const playlists = [
@@ -8,28 +16,67 @@ const playlists = [
     title: 'Maroon 5 Songs',
     type: 'Playlist',
     subType: 'Myself',
-    image: 'https://placeholder.pics/svg/148x148',
+    image:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Maroon_5%2C_2011.jpg/640px-Maroon_5%2C_2011.jpg',
   },
   {
     id: '2',
     title: 'Phonk Madness',
     type: 'Playlist',
-    image: 'https://placeholder.pics/svg/148x148',
+    image:
+      'https://www.gryffinofficial.com/cdn/shop/collections/Untitled-1.png?v=1669396799&width=1080',
   },
-  // Add more playlists similarly...
+  {
+    id: '3',
+    title: 'Hospital Playlist',
+    type: 'Playlist',
+    image:
+      'https://cdn.kphude.com/wp-content/uploads/2023/06/Hospital-Playlist-2-Poster.webp',
+  },
+  {
+    id: '4',
+    title: '5 Củ',
+    type: 'Playlist',
+    image:
+      'https://photo-resize-zmp3.zadn.vn/w600_r1x1_jpeg/cover/c/b/5/2/cb5210a2f85409e2bfb4275b0dfefc26.jpg',
+  },
+  {
+    id: '5',
+    title: 'Justin Bieber',
+    type: 'Playlist',
+    image:
+      'https://i.ytimg.com/vi/Vxwpdx9BB0w/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLCYaL_UjP6gPLCtqssU6WRBgfOGqw',
+  },
+  {
+    id: '6',
+    title: 'Sơn tùng',
+    type: 'Playlist',
+    image:
+      'https://photo-resize-zmp3.zadn.vn/w600_r1x1_jpeg/cover/e/7/7/e/e77e66089e244c0c61188189be25f8ba.jpg',
+  },
+  {
+    id: '7',
+    title: 'Thanh Hưng',
+    type: 'Playlist',
+    image:
+      'https://photo-resize-zmp3.zadn.vn/w600_r1x1_jpeg/cover/7/5/c/e/75ce7a22d799c555689d01b5a2b782d3.jpg',
+  }
 ];
 
 // SearchBar component
 const SearchBar = () => (
-  <View style={styles.searchBar}>
-    <Image source={{uri: 'https://placeholder.pics/svg/24x24'}} style={styles.icon} />
-    <TextInput
-      placeholder="Search"
-      placeholderTextColor="rgba(0, 0, 0, 0.75)"
-      style={styles.input}
-    />
-    <TouchableOpacity>
-      <Image source={{uri: 'https://placeholder.pics/svg/24x24'}} style={styles.icon} />
+  <View style={{ flexDirection: 'row' }}>
+    <View style={styles.searchBar}>
+      <Image source={require('../assets/kinhLup.png')} style={styles.icon} />
+      <TextInput
+        placeholder="Search"
+        placeholderTextColor="rgba(0, 0, 0, 0.75)"
+        style={styles.input}
+      />
+    </View>
+    <TouchableOpacity
+      style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Image source={require('../assets/iconSort.png')} style={styles.icon} />
     </TouchableOpacity>
   </View>
 );
@@ -37,7 +84,7 @@ const SearchBar = () => (
 // PlaylistItem component
 const PlaylistItem = ({ title, type, subType, image }) => (
   <View style={styles.playlistItem}>
-    <Image source={{uri: image}} style={styles.playlistImage} />
+    <Image source={{ uri: image }} style={styles.playlistImage} />
     <Text style={styles.playlistTitle}>{title}</Text>
     <Text style={styles.playlistType}>
       {type} {subType ? `• ${subType}` : ''}
@@ -49,15 +96,24 @@ const PlaylistItem = ({ title, type, subType, image }) => (
 const NavigationBar = () => (
   <View style={styles.navigationBar}>
     <View style={styles.navItem}>
-      <Image source={{uri: 'https://placeholder.pics/svg/24x24'}} style={styles.icon} />
+      <Image
+        source={require('../assets/footerHome.png')}
+        style={styles.iconFooter}
+      />
       <Text style={styles.inactive}>Home</Text>
     </View>
     <View style={styles.navItem}>
-      <Image source={{uri: 'https://placeholder.pics/svg/24x24'}} style={styles.icon} />
+      <Image
+        source={require('../assets/footerSearch.png')}
+        style={styles.iconFooter}
+      />
       <Text style={styles.inactive}>Search</Text>
     </View>
     <View style={styles.navItem}>
-      <Image source={{uri: 'https://placeholder.pics/svg/24x24'}} style={styles.icon} />
+      <Image
+        source={require('../assets/footerLibrary.png')}
+        style={styles.iconFooter}
+      />
       <Text style={styles.active}>Your Library</Text>
     </View>
   </View>
@@ -68,15 +124,21 @@ const PagePlaylist = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image source={{uri: 'https://placeholder.pics/svg/24x24'}} style={styles.backIcon} />
+        <TouchableOpacity>
+          <Image
+            source={require('../assets/iconback.png')}
+            style={styles.backIcon}
+          />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Playlists</Text>
       </View>
+
       <Text style={styles.subheader}>12 playlists</Text>
       <SearchBar />
       <FlatList
         data={playlists}
         renderItem={({ item }) => <PlaylistItem {...item} />}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.row}
         showsVerticalScrollIndicator={false}
@@ -98,8 +160,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   backIcon: {
-    width: 24,
-    height: 24,
+    width: 15,
+    height: 15,
     marginRight: 8,
   },
   headerTitle: {
@@ -120,6 +182,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 16,
     height: 40,
+    flex: 5,
   },
   input: {
     flex: 1,
@@ -168,12 +231,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   icon: {
-    width: 24,
-    height: 24,
+    width: 30,
+    height: 30,
   },
   row: {
-    justifyContent: "space-between"
-  }
+    justifyContent: 'space-between',
+  },
 });
 
 export default PagePlaylist;
