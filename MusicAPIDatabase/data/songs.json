@@ -8,10 +8,7 @@
     "isPaid": false,
     "url": "/audio/NoiNayCoAnh.mp3",
     "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPg-NIVC_cBrwX73i9TEMYC-UETUKYMlgEcA&s",
-    "liked": true,
-    "downloaded": false,
-    "fee":0
-
+    "fee": 0
   },
   {
     "id": "2",
@@ -22,8 +19,6 @@
     "isPaid": false,
     "url": "/audio/HonCaYeu.mp3",
     "image": "https://photo-resize-zmp3.zadn.vn/w600_r1x1_jpeg/cover/a/9/e/d/a9ed142c215560ab45f6b2b433907f90.jpg",
-    "liked":false,
-    "downloaded": false,
     "fee": 10000
   },
   {
@@ -35,8 +30,72 @@
     "isPaid": false,
     "url": "/audio/DungHoiEm.mp3",
     "image": "https://i.ytimg.com/vi/qBPFxyYli2E/maxresdefault.jpg",
-    "liked":true,
-    "downloaded": false,
+    "fee": 20000
+  },
+  {
+    "id": "4",
+    "title": "Buông đôi tay nhau ra",
+    "artistId": "2",
+    "album": "3",
+    "duration": 210,
+    "isPaid": false,
+    "url": "/audio/BuongDoiTayNhauRa-SonTungMTP-4184408.mp3",
+    "image": "https://upload.wikimedia.org/wikipedia/vi/c/c0/Buongdoitaynhauramtp.jpg",
+    "fee": 20000
+  },
+  {
+    "id": "5",
+    "title": "Chắc ai đó sẽ về",
+    "artistId": "2",
+    "album": "3",
+    "duration": 210,
+    "isPaid": false,
+    "url": "/audio/ChacAiDoSeVe-SonTungMTP-3597661.mp3",
+    "image": "https://i.ytimg.com/vi/PdbsnGuduvo/hqdefault.jpg",
+    "fee": 20000
+  },
+  {
+    "id": "6",
+    "title": "Sóng Gió",
+    "artistId": "4",
+    "album": "3",
+    "duration": 210,
+    "isPaid": false,
+    "url": "/audio/icm-x-jack--official-music-video.mp3",
+    "image": "https://karaokedep.com.vn/uploads/images/am-thanh-azktv/loi-bai-hat-song-gio-azktv.jpg",
+    "fee": 20000
+  },
+  {
+    "id": "7",
+    "title": "Bạc Phận",
+    "artistId": "4",
+    "album": "3",
+    "duration": 210,
+    "isPaid": false,
+    "url": "/audio/bacphan--official-mv.mp3",
+    "image": "https://photo-resize-zmp3.zadn.vn/w600_r1x1_jpeg/cover/4/2/5/3/425334e6f252b8c34d74d16177a5eb9d.jpg",
+    "fee": 20000
+  },
+  {
+    "id": "8",
+    "title": "Chuyến xe cuộc đời",
+    "artistId": "5",
+    "album": "3",
+    "duration": 210,
+    "isPaid": false,
+    "url": "/audio/chuyenxecuocdoi.mp3",
+    "image": "https://i.ytimg.com/vi/4ZugwcVE0oE/mqdefault.jpg",
+    "fee": 20000
+  },
+  {
+    "id": "9",
+    "title": "Lao tâm khổ tứ",
+    "artistId": "5",
+    "album": "3",
+    "duration": 210,
+    "isPaid": false,
+    "url": "/audio/LaoTamKhoTu.mp3",
+    "image": "https://photo-resize-zmp3.zadn.vn/w600_r1x1_jpeg/cover/5/5/1/9/5519c620aab58142d986745d984ed943.jpg",
     "fee": 20000
   }
 ]

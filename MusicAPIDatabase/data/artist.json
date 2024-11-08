@@ -20,5 +20,19 @@
     "bio": "A popular artist with many hits.",
     "img": "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQkGaVYOw7ruA2NX7WIrbpZ5GDw5h__jLn-_SlhrNsb6xp8Ii72",
     "albums": ["3"]
+  },
+  {
+    "id": "4",
+    "name": "Jack 5 củ",
+    "bio": "A popular artist with many hits.",
+    "img": "https://i.pinimg.com/736x/fa/fc/4b/fafc4b1052deae2438681e45ff7335a5.jpg",
+    "albums": ["3"]
+  },
+  {
+    "id": "5",
+    "name": "Thanh Hưng",
+    "bio": "A popular artist with many hits.",
+    "img": "https://yt3.googleusercontent.com/j5Rbw-CnprYKAGlp9v-tgdTxko2NSW_1b_KI47gB6X0P63_USLOWK1feKElmvKL0gLNb9cqNFg=s900-c-k-c0x00ffffff-no-rj",
+    "albums": ["3"]
   }
 ]
