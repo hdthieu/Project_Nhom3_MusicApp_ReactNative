@@ -8,6 +8,10 @@ import YourLibrary from './components/YourLibrary';
 import PageDownload from './components/PageDownload';
 import PageLikedSong from './components/PageLikedSong';
 import PagePlaylist from './components/PagePlaylist';
+import WelcomeScr1 from './components/WelcomeScreen';
+import WelcomeScr2 from './components/WelcomeScreen2';
+import SignUpScreen from './components/SignUpScreen';
+import LoginScreen from './components/LoginScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 const Stack = createNativeStackNavigator();
@@ -15,6 +19,34 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="HomePlayer">
+        <Stack.Screen
+          name="WelcomeScreen1"
+          component={WelcomeScr1}
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="WelcomeScreen2"
+          component={WelcomeScr2}
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="SignUpScreen"
+          component={SignUpScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="LoginScreen"
+          component={LoginScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
         <Stack.Screen
           name="HomePlayer"
           component={HomePlayer}
