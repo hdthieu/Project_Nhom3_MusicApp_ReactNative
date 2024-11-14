@@ -1,10 +1,9 @@
-// Redux/UserSlice.js
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  currentUser: null, // Thông tin người dùng hiện tại
-  downloadedSongs: [], // Danh sách bài hát đã tải về
-  likedSongs: [], // Danh sách bài hát yêu thích
+  currentUser: null, 
+  downloadedSongs: [], 
+  likedSongs: [], 
 };
 
 const userSlice = createSlice({
@@ -18,8 +17,11 @@ const userSlice = createSlice({
     setLikedSongs: (state, action) => {
       state.likedSongs = action.payload; // Cập nhật danh sách bài hát yêu thích
     },
+    setDownloadedSongs: (state, action) => {
+      state.downloadedSongs = action.payload; // Cập nhật danh sách bài hát đã tải về
+    },
   },
 });
 
-export const { setUser, setLikedSongs } = userSlice.actions;
+export const { setUser, setLikedSongs, setDownloadedSongs } = userSlice.actions;
 export default userSlice.reducer;

@@ -66,7 +66,12 @@ const navBarStyles = StyleSheet.create({
 
 const CategorySection = () => {
   const navigation = useNavigation();
-  const likedSongs = useSelector((state) =>  state.user.currentUser.profile.likedSongs);
+  const likedSongs = useSelector(
+    (state) => state.user.currentUser.profile.likedSongs
+  );
+  const songDownloads = useSelector(
+    (state) => state.user.currentUser.profile.songDownloaded
+  );
   return (
     <View style={categorySectionStyles.container}>
       <TouchableOpacity
@@ -78,18 +83,21 @@ const CategorySection = () => {
         />
         <Text style={categorySectionStyles.categoryTitle}>Liked Songs</Text>
         <Text style={categorySectionStyles.categoryCount}>
-          {likedSongs ? `${likedSongs.length} songs` : '0 songs'}{' '}
-          {/* Hiển thị số lượng bài hát */}
+          {likedSongs ? `${likedSongs.length} songs` : '0 songs'}
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={categorySectionStyles.categoryContainer}>
+      <TouchableOpacity
+        style={categorySectionStyles.categoryContainer}
+        onPress={() => navigation.navigate('DownloadSongsPage')}>
         <Image
           source={require('../assets/download-for-offline.png')}
           style={categorySectionStyles.icon}
         />
         <Text style={categorySectionStyles.categoryTitle}>Downloads</Text>
-        <Text style={categorySectionStyles.categoryCount}>210 songs</Text>
+        <Text style={categorySectionStyles.categoryCount}>
+          {songDownloads ? `${songDownloads.length} songs` : '0 songs'}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={categorySectionStyles.categoryContainer}>

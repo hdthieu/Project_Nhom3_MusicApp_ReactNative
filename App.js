@@ -12,6 +12,7 @@ import LoginScreen from './components/LoginScreen';
 import ProfileScreen from './components/ProfileScreen';
 import LibraryScreen from './components/LibraryScreen';
 import LikedSongPage from './components/LikedSongPage';
+import DownloadSongsPage from './components/DownloadSongsPage';
 const Stack = createNativeStackNavigator();
 console.log('store:  ', store);
 const App = () => {
@@ -53,6 +54,11 @@ const App = () => {
           <Stack.Screen
             name="LikedSongPage"
             component={LikedSongPage}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="DownloadSongsPage"
+            component={DownloadSongsPage}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>
