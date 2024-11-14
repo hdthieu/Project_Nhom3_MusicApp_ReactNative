@@ -7,46 +7,63 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  Alert,
+  Alert, ActivityIndicator
 } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux'; // Import useDispatch để dispatch action
+import { setUser } from './Redux/UserSlice'; // Import action setUser
 import IPConfig from './IPConfig';
 
-const Stack = createNativeStackNavigator();
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = () => {
+  const navigation = useNavigation();
+  const dispatch = useDispatch(); // Khởi tạo useDispatch
   const { baseUrl } = IPConfig();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    setLoading(true);
     try {
-      // Fetch user data
+      // Fetch users from the backend
       const response = await fetch(`${baseUrl}/users`);
       const users = await response.json();
 
-      // Find if any user matches the entered username and password
+      // Find the user with the matching username and password
       const user = users.find(
         (user) => user.username === username && user.password === password
       );
 
       if (user) {
-        // Login successful
+        // Fetch the list of downloaded songs for the user
+        const downloadedSongsResponse = await fetch(
+          `${baseUrl}/user/${user.id}/downloaded-songs`
+        );
+        const downloadedSongs = await downloadedSongsResponse.json();
+
+        // Dispatch action to store user and downloaded songs in Redux
+        dispatch(setUser({ user, downloadedSongs }));
+
+        // Navigate to the HomePlayer screen
         navigation.navigate('HomePlayer');
       } else {
-        // Login failed, show an alert
         Alert.alert('Login Failed', 'Invalid username or password');
       }
     } catch (error) {
       console.error('Error logging in:', error);
       Alert.alert('Error', 'An error occurred during login. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image style={styles.logo} source={require('../assets/LogoMusico.png')} />
+        <Image
+          style={styles.logo}
+          source={require('../assets/LogoMusico.png')}
+        />
       </View>
 
       <View style={styles.inputContainer}>
@@ -67,17 +84,27 @@ const LoginScreen = ({ navigation }) => {
         />
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+        {loading ? (
+          <ActivityIndicator size="small" color="#0000ff" />
+        ) : (
+          <Text style={styles.buttonText}>Login</Text>
+        )}
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.buttonSecondary}>
-        <Image source={require('../assets/bi_phone.png')} style={styles.buttonIcon} />
+        <Image
+          source={require('../assets/bi_phone.png')}
+          style={styles.buttonIcon}
+        />
         <Text style={styles.buttonTextDark}>Continue with Phone Number</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.buttonSecondary}>
-        <Image source={require('../assets/Google.png')} style={styles.buttonIcon} />
+        <Image
+          source={require('../assets/Google.png')}
+          style={styles.buttonIcon}
+        />
         <Text style={styles.buttonTextDark}>Continue with Google</Text>
       </TouchableOpacity>
     </View>

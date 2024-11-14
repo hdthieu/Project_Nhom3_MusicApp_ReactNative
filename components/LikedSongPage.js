@@ -1,169 +1,155 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
+  StyleSheet,
+  FlatList,
   Image,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  FlatList,
-} from 'react-native';
-
-const SongItem = ({ songName, artist, albumArtUrl }) => {
-  return (
-    <View style={styles.songItemContainer}>
-      <Image
-        source={{ uri: albumArtUrl || 'https://picsum.photos/id/237/200/300' }}
-        style={styles.albumArt}
+} from 'react-native';  
+import IPConfig from './IPConfig';
+import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
+import { setCurrentSong } from './Redux/PlayerSlice';
+import { setLikedSongs } from './Redux/UserSlice';
+// SearchBar component
+const SearchBar = () => (
+  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <View style={styles.searchBar}>
+      <Image source={require('../assets/kinhLup.png')} style={styles.icon} />
+      <TextInput
+        placeholder="Search"
+        placeholderTextColor="rgba(0, 0, 0, 0.75)"
+        style={styles.input}
       />
-      <View style={styles.textContainer}>
-        <Text style={styles.songName}>{songName}</Text>
-        <Text style={styles.artist}>{artist}</Text>
-      </View>
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity style={styles.actionButton}>
-          <Image
-            source={require('../assets/check_circle.png')}
-            style={styles.actionIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <Image
-            source={require('../assets/baChamLikedSong.png')}
-            style={styles.actionIcon}
-          />
-        </TouchableOpacity>
-      </View>
     </View>
-  );
-};
+    <View style={{ flex: 1 }}>
+      <Image source={require('../assets/iconSort.png')} style={styles.icon} />
+    </View>
+  </View>
+);
 
-const SearchBar = () => {
+const SongItem = ({ id, title, artist, image, onPress }) => {
   return (
-    <View style={{ flexDirection: 'row' }}>
-      <View style={styles.searchBarContainer}>
-        <Image
-          style={styles.searchIcon}
-          source={require('../assets/kinhLup.png')}
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search"
-          placeholderTextColor="#000000bf"
-        />{' '}
+    <TouchableOpacity style={styles.songItem} onPress={() => onPress(id)}>
+      <Image source={{ uri: image }} style={styles.songImage} />
+      <View style={styles.songInfo}>
+        <Text style={styles.songTitle}>{title}</Text>
+        <Text style={styles.songArtist}>{artist}</Text>
       </View>
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Image source={require('../assets/iconSort.png')} />
-      </View>
-    </View>
-  );
-};
-
-const NavigationBar = () => {
-  return (
-    <View style={{ flex: 1, marginBottom: 40 }}>
-      <View style={styles.footer}>
-        {/* Nút Home */}
-        <TouchableOpacity
-          style={{ justifyContent: 'center', alignItems: 'center' }}
-          onPress={() => navigation.navigate('Home')}>
-          <Image source={require('../assets/footerHome.png')} />
-          <Text style={styles.label}>Home</Text>
-        </TouchableOpacity>
-
-        {/* Nút Explore */}
-        <TouchableOpacity
-          style={{ justifyContent: 'center', alignItems: 'center' }}
-          onPress={() => navigation.navigate('Explore')}>
-          <Image source={require('../assets/footerSearch.png')} />
-          <Text style={styles.label}>Explore</Text>
-        </TouchableOpacity>
-
-        {/* Nút Profile */}
-        <TouchableOpacity
-          style={{ justifyContent: 'center', alignItems: 'center' }}
-          onPress={() => navigation.navigate('Profile')}>
+      <View style={styles.actionIcons}>
+        <TouchableOpacity>
           <Image
-            style={{ color: 'white' }}
-            source={require('../assets/footerLibrary.png')}
+            source={require('../assets/icondownload.png')}
+            style={styles.iconItem}
           />
-          <Text style={styles.label}>Profile</Text>
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Image
+            source={require('../assets/iconBaCham.png')}
+            style={styles.iconItem}
+          />
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
-const LikedSongPage = ({ navigation }) => {
-  const [songs, setSongs] = useState([]);
-  const [artists, setArtists] = useState([]);
+// NavigationBar component
+const NavigationBar = () => (
+  <View style={styles.navigationBar}>
+    <TouchableOpacity
+      style={styles.navItem}
+      onPress={() => navigation.navigate('HomePlayer')}>
+      <Image
+        source={require('../assets/footerHome.png')}
+        style={styles.iconFooter}
+      />
+      <Text style={styles.inactive}>Home</Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+      style={styles.navItem}
+      onPress={() => navigation.navigate('SearchScreen')}>
+      <Image
+        source={require('../assets/footerSearch.png')}
+        style={styles.iconFooter}
+      />
+      <Text style={styles.inactive}>Search</Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+      style={styles.navItem}
+      onPress={() => navigation.navigate('YourLibrary')}>
+      <Image
+        source={require('../assets/footerLibrary.png')}
+        style={styles.iconFooter}
+      />
+      <Text style={styles.active}>Your Library</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+const LikedSongPage = () => {
+  const { baseUrl } = IPConfig();
+  const dispatch = useDispatch();
+  const likedSongs = useSelector((state) => state.user.likedSongs);
+  const user = useSelector((state) => state.user.currentUser);
+  const navigation = useNavigation();
+
   useEffect(() => {
     const fetchSongs = async () => {
       try {
-        const response = await fetch('http://localhost:3000/songs');
+        const response = await fetch(`${baseUrl}/songs`);
         const data = await response.json();
-        setSongs(data);
+
+        if (user?.profile?.likedSongs) {
+          const likedSongsData = data.filter((song) =>
+            user.profile.likedSongs.includes(song.id)
+          );
+          dispatch(setLikedSongs(likedSongsData)); // Cập nhật likedSongs vào Redux
+        }
       } catch (error) {
         console.error('Error fetching songs:', error);
       }
     };
 
-    const fetchArtists = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/artists');
-        const data = await response.json();
-        setArtists(data);
-      } catch (error) {
-        console.error('Error fetching artists:', error);
-      }
-    };
-
     fetchSongs();
-    fetchArtists();
-  }, []);
-  const handleSongPress = (song) => {
-    const artist = artists.find((artist) => artist.id === song.artistId);
-    const songWithArtist = {
-      ...song,
-      artist: artist
-        ? {
-            name: artist.name,
-            bio: artist.bio,
-            img: artist.img,
-          }
-        : null,
-    };
+  }, [baseUrl, user, dispatch]);
 
-    // Điều hướng sang MusicPlayer và truyền songWithArtist
-    navigation.navigate('MusicPlayer', { song: songWithArtist });
+  const handleSongPress = (songId) => {
+    const selectedSong = likedSongs.find((song) => song.id === songId);
+    if (selectedSong) {
+      dispatch(setCurrentSong(selectedSong)); // Cập nhật bài hát hiện tại trong PlayerSlice
+      navigation.navigate('MusicPlayer'); // Điều hướng đến MusicPlayer
+    }
   };
+
   return (
     <View style={styles.container}>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Image source={require('../assets/iconback.png')} />
-        <Text style={styles.title}>Liked Songs</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.navigate('YourLibrary')}>
+          <Image
+            source={require('../assets/iconback.png')}
+            style={styles.backIcon}
+          />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Liked Songs</Text>
       </View>
-      <Text style={styles.subtitle}>120 liked songs</Text>
+      <Text style={styles.subheader}>{likedSongs.length} liked songs</Text>
       <SearchBar />
       <FlatList
-        data={songs}
-        showsHorizontalScrollIndicator={false}
-        renderItem={({ item }) => {
-          const artist = artists.find((artist) => artist.id === item.artistId);
-          const liked = item.liked === true;
-          if (liked) {
-            return (
-              <TouchableOpacity onPress={() => handleSongPress(item)}>
-                <SongItem
-                  songName={item.title}
-                  artist={artist ? artist.name : 'Unknown Artist'}
-                  albumArtUrl={item.image}
-                />
-              </TouchableOpacity>
-            );
-          }
-        }}
+        data={likedSongs}
+        renderItem={({ item }) => (
+          <SongItem
+            id={item.id}
+            title={item.title}
+            artist={item.artist}
+            image={item.image}
+            onPress={handleSongPress}
+          />
+        )}
         keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
       />
       <NavigationBar />
     </View>
@@ -174,108 +160,103 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'black',
-    paddingHorizontal: 8,
-    paddingVertical: 16,
   },
-  songItemContainer: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#000',
-    padding: 8,
-    height: 48,
-    width: '100%',
+    padding: 16,
   },
-  albumArt: {
+  backIcon: {
+    width: 15,
+    height: 15,
+    marginRight: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  subheader: {
+    paddingLeft: 16,
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 14,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    margin: 16,
+    height: 40,
+    flex: 5,
+  },
+  input: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 16,
+    color: 'rgba(0, 0, 0, 0.75)',
+  },
+  songItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  songImage: {
     width: 32,
     height: 32,
     borderRadius: 5,
-    marginLeft: 24,
-  },
-  textContainer: {
-    flex: 1,
-    marginLeft: 10,
-    justifyContent: 'center',
-  },
-  songName: {
-    color: '#ffffffff',
-    fontFamily: 'Inter',
-    fontWeight: '500',
-    fontSize: 12,
-    lineHeight: 14,
-  },
-  artist: {
-    color: '#ffffff80',
-    fontFamily: 'Inter',
-    fontWeight: '500',
-    fontSize: 12,
-    lineHeight: 14,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 24,
-  },
-  actionButton: {
-    marginLeft: 8,
-  },
-  actionIcon: {
-    width: 24,
-    height: 24,
-  },
-  searchBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    backgroundColor: '#ffffffbf',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginVertical: 16,
-    flex: 5,
-  },
-  searchIcon: {
-    width: 24,
-    height: 24,
     marginRight: 8,
   },
-  searchInput: {
+  songInfo: {
     flex: 1,
-    height: 20,
-    fontWeight: '500',
-    fontSize: 16,
-    lineHeight: 20,
-    color: '#000000bf',
   },
-  title: {
-    color: '#fff',
-    fontFamily: 'Inter',
-    fontWeight: 'bold',
-    fontSize: 24,
-    textAlign: 'left',
-    marginBottom: 4,
-    marginLeft: '5%',
+  songTitle: {
+    fontSize: 12,
+    color: '#FFFFFF',
   },
-  subtitle: {
-    color: '#ffffff80',
-    fontFamily: 'Inter',
-    fontWeight: '500',
-    fontSize: 16,
-    textAlign: 'left',
-    marginBottom: 16,
+  songArtist: {
+    fontSize: 12,
+    color: '#FFFFFF80',
   },
-  footer: {
+  actionIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  icon: {
+    width: 30,
+    height: 30,
+    marginLeft: 8,
+  },
+  navigationBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 10,
-    backgroundColor: 'black',
-    borderTopWidth: 1,
-    borderColor: 'grey',
+    paddingVertical: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
   },
-  label: {
-    color: 'white',
-    fontSize: 12,
-    marginTop: 2,
+  navItem: {
+    alignItems: 'center',
+  },
+  inactive: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.25)',
+    marginTop: 4,
+  },
+  active: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.75)',
+    marginTop: 4,
+  },
+  iconFooter: {
+    width: 20,
+    height: 20,
+    // marginLeft: 8,
+  },
+  iconItem: {
+    width: 15,
+    height: 15,
+    marginLeft: 8,
   },
 });
 

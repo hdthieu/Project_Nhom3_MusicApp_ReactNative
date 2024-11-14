@@ -23,9 +23,8 @@ export default function HomePlayer() {
         const response = await fetch(`${baseUrl}/artists`);
         const data = await response.json();
         setArtists(data);
-        console.log(data)
       } catch (error) {
-        console.error('Error fetching artists 1:', error);
+        console.error('Error fetching artists:', error);
       }
     };
     fetchArtists();
@@ -153,10 +152,13 @@ export default function HomePlayer() {
               style={{ width: 60, height: 60 }}
               source={require('../assets/chuong.png')}
             />
-            <Image
-              style={{ width: 60, height: 60 }}
-              source={require('../assets/faceHome.png')}
-            />
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ProfileScreen')}>
+              <Image
+                style={{ width: 60, height: 60 }}
+                source={require('../assets/faceHome.png')}
+              />
+            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.styleFlatListCommon}>
@@ -327,12 +329,12 @@ export default function HomePlayer() {
             {/* Nút Profile */}
             <TouchableOpacity
               style={{ justifyContent: 'center', alignItems: 'center' }}
-              onPress={() => navigation.navigate('Profile')}>
+              onPress={() => navigation.navigate('LibraryScreen')}>
               <Image
                 style={{ color: 'white' }}
                 source={require('../assets/footerLibrary.png')}
               />
-              <Text style={styles.label}>Profile</Text>
+              <Text style={styles.label}>Your Library</Text>
             </TouchableOpacity>
           </View>
         </View>

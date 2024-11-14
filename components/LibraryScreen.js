@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,11 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
+import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import IPConfig from './IPConfig';
-
 const NavigationBar = () => {
+  const navigation = useNavigation();
   return (
     <View style={{ flex: 1 }}>
       <View style={navBarStyles.footer}>
@@ -65,17 +66,21 @@ const navBarStyles = StyleSheet.create({
 
 const CategorySection = () => {
   const navigation = useNavigation();
+  const likedSongs = useSelector((state) =>  state.user.currentUser.profile.likedSongs);
   return (
     <View style={categorySectionStyles.container}>
       <TouchableOpacity
         style={categorySectionStyles.categoryContainer}
-        onPress={() => navigation.navigate('PageLikedSong')}>
+        onPress={() => navigation.navigate('LikedSongPage')}>
         <Image
           source={require('../assets/favorite.png')}
           style={categorySectionStyles.icon}
         />
         <Text style={categorySectionStyles.categoryTitle}>Liked Songs</Text>
-        <Text style={categorySectionStyles.categoryCount}>120 songs</Text>
+        <Text style={categorySectionStyles.categoryCount}>
+          {likedSongs ? `${likedSongs.length} songs` : '0 songs'}{' '}
+          {/* Hiển thị số lượng bài hát */}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={categorySectionStyles.categoryContainer}>

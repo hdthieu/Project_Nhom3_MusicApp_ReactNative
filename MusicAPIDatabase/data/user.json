@@ -1,15 +1,16 @@
 [
   {
     "id": "1",
-    "username": "TriHieu132003",
-    "password": "123456",
+    "username": "TH",
+    "password": "1",
     "email": "TriHieu@example.com",
     "phone": "0337850724",
     "profile": {
       "displayName": "Trí Hiếu",
       "avatar": "https://w7.pngwing.com/pngs/340/946/png-transparent-avatar-user-computer-icons-software-developer-avatar-child-face-heroes.png",
       "playlists": ["1", "2"],
-      "likedSongs": ["1", "2", "3"]
+      "likedSongs": ["1", "2", "3"],
+      "songDownloaded": ["5", "6", "8"]
     },
     "balance": 20000
   },
@@ -23,7 +24,8 @@
       "displayName": "Thanh Phú",
       "avatar": "https://meatworld.com.vn/wp-content/uploads/anh-avatar-anime-2-1.jpg",
       "playlists": ["1", "2"],
-      "likedSongs": ["4", "2", "6"]
+      "likedSongs": ["4", "2", "6"],
+      "songDownloaded": ["4", "2", "3"]
     },
     "balance": 30000
   }

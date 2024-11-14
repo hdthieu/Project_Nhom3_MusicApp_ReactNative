@@ -1,4 +1,3 @@
-// App.js
 import React, { useState, useEffect } from 'react';
 import {
   FlatList,
@@ -11,10 +10,15 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import { setCurrentSong } from './Redux/PlayerSlice'; // import action
 import IPConfig from './IPConfig';
+
 const { baseUrl } = IPConfig();
+
 const Artists = ({ route }) => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const { artist } = route.params;
   const [artists, setArtists] = useState([]);
   const [songs, setSongs] = useState([]);
@@ -27,7 +31,6 @@ const Artists = ({ route }) => {
         setSongs(data);
       } catch (error) {
         console.error('Error fetching songs:', error);
-        console.log("1")
       }
     };
 
@@ -45,46 +48,34 @@ const Artists = ({ route }) => {
     fetchArtists();
   }, []);
 
-  const playlistData = [
-    {
-      image: require('../assets/artistYou.png'),
-      name: 'Maroon 5: Best of the best',
-    },
-    {
-      image: require('../assets/artistYou.png'),
-      name: 'This is Maroon 5',
-    },
-    {
-      image: require('../assets/artistYou.png'),
-      name: 'Maroon 5 - Top Hits',
-    },
-    // Add more playlists as needed
-  ];
+  const handleSongPress = (song) => {
+    const artistData = artists.find((a) => a.id === song.artistId);
+    const songWithArtist = {
+      ...song,
+      artist: artistData
+        ? { name: artistData.name, bio: artistData.bio, img: artistData.img }
+        : null,
+    };
+    dispatch(setCurrentSong(songWithArtist)); // Lưu bài hát vào Redux
+    navigation.navigate('MusicPlayer'); // Điều hướng đến trang phát nhạc
+  };
+
   const currentArtistId = artist.id;
   const filteredSongs = songs.filter(
     (song) => song.artistId === currentArtistId
   );
-  const handleSongPress = (song) => {
-    const artist = artists.find((artist) => artist.id === song.artistId);
-    const songWithArtist = {
-      ...song,
-      artist: artist
-        ? {
-            name: artist.name,
-            bio: artist.bio,
-            img: artist.img,
-          }
-        : null,
-    };
-    // Điều hướng sang MusicPlayer và truyền songWithArtist
-    navigation.navigate('MusicPlayer', { song: songWithArtist });
-  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image style={styles.headerImage} source={{ uri: artist.img }} />
+        <Image source={{ uri: artist.img }} style={styles.headerImage} />
         <View style={styles.headerContent}>
-          <Icon name="arrow-back" size={24} color="#fff" />
+          <Icon
+            name="arrow-back"
+            size={24}
+            color="#fff"
+            onPress={() => navigation.goBack()}
+          />
           <Text style={styles.artistName}>{artist.name}</Text>
           <Text style={styles.artistType}>Artist</Text>
         </View>
@@ -104,64 +95,26 @@ const Artists = ({ route }) => {
         />
       </View>
 
-      <ScrollView style={{ flex: 8 }} showsHorizontalScrollIndicator={false}>
-        <View style={styles.popularReleases}>
-          <View
-            style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={styles.sectionTitle}>Popular releases</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeMore}>See more</Text>
+      <ScrollView style={styles.popularReleases}>
+        <FlatList
+          data={filteredSongs}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.releaseItem}
+              onPress={() => handleSongPress(item)}>
+              <Image source={{ uri: item.image }} style={styles.albumCover} />
+              <View>
+                <Text style={styles.releaseTitle}>{item.title}</Text>
+                <Text style={styles.releaseAlbum}>{item.album}</Text>
+              </View>
             </TouchableOpacity>
-          </View>
-
-          <FlatList
-            showsHorizontalScrollIndicator={false}
-            data={filteredSongs}
-            renderItem={({ item }) => {
-              return (
-                <TouchableOpacity
-                  style={styles.releaseItem}
-                  onPress={() => handleSongPress(item)}>
-                  <Image source={{uri: item.image}} style={styles.albumCover} />
-                  <View>
-                    <Text style={styles.releaseTitle}>{item.title}</Text>
-                    <Text style={styles.releaseAlbum}>{item.album}</Text>
-                  </View>
-                  <Icon
-                    name="more-vert"
-                    size={24}
-                    color="#fff"
-                    style={styles.moreOptions}
-                  />
-                </TouchableOpacity>
-              );
-            }}
-          />
-        </View>
+          )}
+        />
       </ScrollView>
-      <View style={styles.navBar}>
-        {navItems.map((item, index) => (
-          <View key={index} style={styles.navItem}>
-            <Icon
-              name={item.icon}
-              size={24}
-              color={item.active ? '#fff' : '#ffffff80'}
-            />
-            <Text style={[styles.navText, item.active && styles.activeNavText]}>
-              {item.label}
-            </Text>
-          </View>
-        ))}
-      </View>
     </View>
   );
 };
-
-const navItems = [
-  { icon: 'home', label: 'Home' },
-  { icon: 'search', label: 'Search', active: true },
-  { icon: 'library-music', label: 'Your Library' },
-];
 
 const styles = StyleSheet.create({
   container: {
@@ -170,7 +123,7 @@ const styles = StyleSheet.create({
   },
   header: {
     position: 'relative',
-    height: 200,
+    height: 250,
   },
   headerImage: {
     width: '100%',
@@ -180,95 +133,63 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 16,
     left: 16,
+    zIndex: 1,
   },
   artistName: {
     color: '#fff',
     fontSize: 24,
     fontWeight: '700',
-    lineHeight: 28,
     textAlign: 'center',
   },
   artistType: {
     color: '#ffffffbf',
     fontSize: 12,
-    lineHeight: 14,
+    textAlign: 'center',
   },
   listenerSection: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
+    alignItems: 'center',
   },
   listenerText: {
     color: '#ffffffbf',
     fontSize: 12,
   },
   followButton: {
-    backgroundColor: '#ffffffbf',
-    borderRadius: 25,
-    paddingHorizontal: 12,
+    backgroundColor: '#1db954',
     paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
   },
   followButtonText: {
-    color: '#000',
-    fontSize: 16,
-  },
-  playIcon: {
-    marginLeft: 8,
+    color: '#fff',
+    fontSize: 14,
   },
   popularReleases: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    flex: 2,
-  },
-  sectionTitle: {
-    color: '#ffffffbf',
-    fontSize: 24,
-    fontWeight: '500',
-  },
-  seeMore: {
-    color: '#fff',
-    fontSize: 16,
-    marginTop: 8,
+    padding: 16,
   },
   releaseItem: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
+    marginBottom: 16,
   },
   albumCover: {
-    width: 32,
-    height: 32,
-    marginRight: 8,
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 16,
   },
   releaseTitle: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   releaseAlbum: {
-    color: '#ffffff80',
+    color: '#ffffffbf',
     fontSize: 12,
   },
-  moreOptions: {
-    marginLeft: 'auto',
-  },
-  navBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    flex: 1,
-  },
-  navItem: {
-    alignItems: 'center',
-  },
-  navText: {
-    color: '#ffffff80',
-    fontSize: 10,
-    marginTop: 4,
-  },
-  activeNavText: {
-    color: '#fff',
+  playIcon: {
+    marginLeft: 8,
   },
 });
 

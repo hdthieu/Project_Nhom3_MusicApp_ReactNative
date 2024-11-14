@@ -1,219 +1,339 @@
 import React, { useState, useEffect } from 'react';
+import { Audio } from 'expo-av';
 import {
   View,
   Text,
-  Image,
-  StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
+  Image,
   ScrollView,
+  StyleSheet,
 } from 'react-native';
-import { Audio } from 'expo-av';
-import Slider from '@react-native-community/slider';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  setCurrentSong,
+  togglePlay,
+  skipSong,
+  previousSong,
+} from './Redux/PlayerSlice';
 import IPConfig from './IPConfig';
-
-const player = ({ route }) => {
+import Slider from '@react-native-community/slider';
+import { fetchArtists } from './Redux/ArtistsSlice';
+const Player = () => {
   const { baseUrl } = IPConfig();
-  const [currentSound, setCurrentSound] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const dispatch = useDispatch();
+  const currentSong = useSelector((state) => state.player.currentSong);
+  const isPlaying = useSelector((state) => state.player.isPlaying);
+  const userDownloadedSongs = useSelector(
+    (state) => state.user.downloadedSongs
+  );
+
+  const [sound, setSound] = useState();
+  const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isFullScreen, setIsFullScreen] = useState(true);
-  const [songs, setSongs] = useState([]);
-  const { song } = route.params;
+  const [isLooping, setIsLooping] = useState(false); // State to control loop functionality
+  const [isShuffling, setIsShuffling] = useState(false); // State to control shuffle functionality
+  const [artists, setArtists] = useState([]); // Lưu danh sách các nghệ sĩ
+  const [artist, setArtist] = useState(null); // Lưu nghệ sĩ của bài hát hiện tại
+  // Function to shuffle songs
+  const shuffleSongs = (songs) => {
+    const shuffled = [...songs];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; // Swap elements
+    }
+    return shuffled;
+  };
 
+  // Load the song
   useEffect(() => {
-    const fetchSongs = async () => {
-      try {
-        const response = await fetch(`${baseUrl}/songs`);
-        const data = await response.json();
-        setSongs(data);
-        console.log(data);
-      } catch (error) {
-        console.error('Error fetching songs:', error);
-        console.log('2');
-      }
-    };
+    console.log('useEffect1');
+    if (currentSong) {
+      const audioUrl = `${baseUrl}/audio/${currentSong.id}`;
 
-    fetchSongs();
-
-    return () => {
-      if (currentSound) {
-        currentSound.unloadAsync();
-      }
-    };
-  }, [baseUrl]);
-
-  const playAudio = async () => {
-    try {
-      if (currentSound) {
-        const status = await currentSound.getStatusAsync();
-        if (status.isPlaying) {
-          await currentSound.pauseAsync();
-          setIsPlaying(false);
-        } else {
-          await currentSound.playAsync();
-          setIsPlaying(true);
+      const loadSong = async () => {
+        if (sound) {
+          await sound.stopAsync();
+          await sound.unloadAsync();
         }
-      } else {
-        const audioUrl = `${baseUrl}/audio/${song.id}`;
-        const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
-        setCurrentSound(sound);
 
-        sound.setOnPlaybackStatusUpdate((status) => {
-          if (status.isLoaded) {
-            setCurrentTime(status.positionMillis);
-            setDuration(status.durationMillis);
-            setIsPlaying(status.isPlaying);
+        try {
+          const { sound: newSound, status } = await Audio.Sound.createAsync(
+            { uri: audioUrl },
+            { shouldPlay: isPlaying, isLooping }
+          );
+
+          setSound(newSound);
+          setIsLoading(false);
+
+          // Listen for playback status updates
+          newSound.setOnPlaybackStatusUpdate((status) => {
+            if (status.isLoaded) {
+              setCurrentTime(status.positionMillis / 1000);
+              setDuration(status.durationMillis / 1000);
+
+              // Chuyển bài mới khi bài hiện tại kết thúc
+              if (status.didJustFinish) {
+                if (isLooping) {
+                  newSound.replayAsync(); // Lặp lại nếu đang ở chế độ lặp
+                } else {
+                  handleSkip(); // Tự động chuyển bài mới khi hết bài
+                }
+              }
+            }
+          });
+        } catch (error) {
+          console.error('Error loading sound:', error);
+          setIsLoading(false);
+        }
+      };
+
+      loadSong();
+
+      return () => {
+        if (sound) {
+          sound.unloadAsync();
+        }
+      };
+    }
+  }, [currentSong, baseUrl, isLooping, handleSkip]);
+
+  // Khi sound được tải xong, sẽ chạy 1 lần
+  useEffect(() => {
+    console.log('useEffect - Initial sound setup');
+    if (sound && !isLoading) {
+      const playPauseSound = async () => {
+        try {
+          if (isPlaying) {
+            await sound.playAsync();
+          } else {
+            await sound.pauseAsync();
           }
-        });
+        } catch (error) {
+          console.error('Error playing or pausing sound:', error);
+        }
+      };
 
-        await sound.playAsync();
-        setIsPlaying(true);
+      playPauseSound();
+    }
+  }, [sound, isLoading]); // Chỉ chạy lại khi sound hoặc isLoading thay đổi
+
+  // Khi chỉ có isPlaying thay đổi, sẽ kiểm soát play/pause
+  useEffect(() => {
+    console.log('useEffect - Toggling play/pause');
+    if (sound && !isLoading) {
+      const togglePlayPause = async () => {
+        try {
+          if (isPlaying) {
+            await sound.playAsync();
+          } else {
+            await sound.pauseAsync();
+          }
+        } catch (error) {
+          console.error('Error in toggling play/pause:', error);
+        }
+      };
+
+      togglePlayPause();
+    }
+  }, [isPlaying]); // Chỉ chạy khi isPlaying thay đổi
+
+  // load artist
+  useEffect(() => {
+    const fetchArtists = async () => {
+      try {
+        const response = await fetch(`${baseUrl}/artists`);
+        const data = await response.json();
+        setArtists(data);
+        setIsLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error playing sound:', error);
-    }
-  };
+    };
 
-  const stopAudio = async () => {
-    if (currentSound) {
-      await currentSound.pauseAsync();
-      setIsPlaying(false);
-    }
-  };
+    fetchArtists();
+  }, []);
 
-  const handleSongPress = () => {
-    if (isPlaying) {
-      stopAudio();
+  // Lấy artist của bài hát hiện tại
+  useEffect(() => {
+    if (currentSong && artists.length > 0) {
+      const foundArtist = artists.find(
+        (artist) => artist.id === currentSong.artistId
+      );
+      setArtist(foundArtist);
+    }
+  }, [currentSong, artists]);
+
+  // Handle skip song (shuffle or normal)
+  const handleSkip = () => {
+    console.log('skip1   ', userDownloadedSongs);
+    if (isShuffling) {
+      // If shuffle is on, pick a random song
+      const shuffledSongs = shuffleSongs(userDownloadedSongs);
+      const nextSong = shuffledSongs.find((song) => song.id !== currentSong.id); // Ensure the song is different
+      dispatch(setCurrentSong(nextSong)); // Set the next shuffled song
     } else {
-      playAudio();
+      dispatch(skipSong(userDownloadedSongs)); // Skip to the next song normally
     }
   };
 
-  const formatTime = (millis) => {
-    if (!millis || millis <= 0) return '0:00';
-    const minutes = Math.floor(millis / 60000);
-    const seconds = ((millis % 60000) / 1000).toFixed(0);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  const handlePrevious = () => {
+    if (isShuffling) {
+      // If shuffle is on, pick a random previous song
+      const shuffledSongs = shuffleSongs(userDownloadedSongs);
+      const prevSong = shuffledSongs.find((song) => song.id !== currentSong.id);
+      dispatch(setCurrentSong(prevSong));
+    } else {
+      dispatch(previousSong()); // Go back to the previous song normally
+    }
   };
 
-  const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen);
+  const handlePlayPause = () => {
+    dispatch(togglePlay()); // Toggle play/pause
   };
 
+  const handleSeek = (value) => {
+    if (sound) {
+      sound.setPositionAsync(value * 1000); // Set position in milliseconds
+    }
+  };
+
+  const toggleLoop = () => {
+    setIsLooping((prevState) => !prevState); // Toggle looping state
+  };
+
+  const toggleShuffle = () => {
+    setIsShuffling((prevState) => !prevState); // Toggle shuffle state
+  };
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
+  console.log('currentsong', currentSong);
   return (
     <View style={styles.container}>
-      {isFullScreen ? (
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Nút để thu nhỏ giao diện */}
-          <TouchableOpacity onPress={toggleFullScreen} style={styles.topBar}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <TouchableOpacity style={styles.topBar}>
+          <Image
+            source={require('../assets/iconDropdown.png')}
+            style={styles.icon}
+          />
+          <Text style={styles.time}>12:00</Text>
+          <Image
+            source={require('../assets/iconBaCham.png')}
+            style={styles.icon}
+          />
+        </TouchableOpacity>
+
+        <View style={styles.albumContainer}>
+          <Image source={{ uri: currentSong.image }} style={styles.albumArt} />
+        </View>
+
+        <View style={styles.songInfo}>
+          <Text style={styles.songTitle}>{currentSong.title}</Text>
+          <Text style={styles.songArtist}>
+            {artist ? artist.name : 'Unknown Artist'}
+          </Text>
+        </View>
+
+        {/* Progress Bar */}
+        <View style={styles.progressBarContainer}>
+          <Text style={styles.currentTime}>{formatTime(currentTime)}</Text>
+          <Slider
+            style={styles.progressBar}
+            minimumValue={0}
+            maximumValue={duration}
+            value={currentTime}
+            minimumTrackTintColor="#FFFFFF"
+            maximumTrackTintColor="#888888"
+            thumbTintColor="#FFFFFF"
+            onValueChange={handleSeek} // Seek when the slider is changed
+          />
+          <Text style={styles.duration}>{formatTime(duration)}</Text>
+        </View>
+
+        {/* Control Buttons */}
+        <View style={styles.controls}>
+          {/* Shuffle Button */}
+          <TouchableOpacity onPress={toggleShuffle}>
             <Image
-              source={require('../assets/iconDropdown.png')}
-              style={styles.icon}
-            />
-            <Text style={styles.time}>12:00</Text>
-            <Image
-              source={require('../assets/iconBaCham.png')}
-              style={styles.icon}
+              style={styles.buttonIcon2}
+              source={
+                isShuffling
+                  ? require('../assets/shuffleOn.png') // Shuffle on icon
+                  : require('../assets/shuffle.png') // Shuffle off icon
+              }
             />
           </TouchableOpacity>
-
-          {/* Album Art và Thông tin bài hát */}
-          <View style={styles.albumContainer}>
-            <Image source={{ uri: song.image }} style={styles.albumArt} />
-          </View>
-
-          <View style={styles.songInfo}>
-            <Text style={styles.songTitle}>{song.title}</Text>
-            <Text style={styles.songArtist}>
-              {song.artist ? song.artist.name : 'Unknown Artist'}
-            </Text>
-          </View>
-
-          {/* Thanh tiến trình */}
-          <View style={styles.progressBarContainer}>
-            <Text style={styles.currentTime}>{formatTime(currentTime)}</Text>
-            <Slider
-              style={styles.progressBar}
-              minimumValue={0}
-              maximumValue={duration}
-              value={currentTime}
-              minimumTrackTintColor="#FFFFFF"
-              maximumTrackTintColor="#888888"
-              thumbTintColor="#FFFFFF"
-              onValueChange={(value) => {
-                if (currentSound) {
-                  currentSound.setPositionAsync(value);
-                }
-              }}
+          <TouchableOpacity onPress={handlePrevious}>
+            <Image
+              style={styles.buttonIcon2}
+              source={require('../assets/skip-back-forward.png')}
             />
-            <Text style={styles.duration}>{formatTime(duration)}</Text>
-          </View>
-
-          {/* Nút điều khiển */}
-          <View style={styles.controls}>
-            <TouchableOpacity>
-              <Image
-                style={styles.buttonIcon2}
-                source={require('../assets/TronBai.png')}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Image
-                style={styles.buttonIconskip}
-                source={require('../assets/skip-back-forward.png')}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleSongPress}>
-              <Image
-                source={
-                  isPlaying
-                    ? require('../assets/stopArrow.png')
-                    : require('../assets/playArrow.png')
-                }
-                style={styles.playButtonIcon}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Image
-                style={styles.buttonIconskip}
-                source={require('../assets/skip-forward.png')}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Image
-                style={styles.buttonIcon2}
-                source={require('../assets/repeat.png')}
-              />
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      ) : (
-        // Mini Player hiển thị ở dưới cùng màn hình
-        <TouchableOpacity onPress={toggleFullScreen} style={styles.miniPlayer}>
-          <Image source={{ uri: song.image }} style={styles.miniAlbumArt} />
-          <View style={styles.miniInfo}>
-            <Text style={styles.miniSongTitle}>{song.title}</Text>
-            <Text style={styles.miniSongArtist}>
-              {song.artist ? song.artist.name : 'Unknown Artist'}
-            </Text>
-          </View>
-          <TouchableOpacity onPress={handleSongPress}>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handlePlayPause} disabled={isLoading}>
             <Image
               source={
                 isPlaying
                   ? require('../assets/stopArrow.png')
                   : require('../assets/playArrow.png')
               }
-              style={styles.miniPlayButtonIcon}
+              style={styles.playButtonIcon}
             />
           </TouchableOpacity>
-        </TouchableOpacity>
-      )}
+          <TouchableOpacity onPress={handleSkip}>
+            <Image
+              style={styles.buttonIconskip}
+              source={require('../assets/skip-forward.png')}
+            />
+          </TouchableOpacity>
+
+          {/* Loop Button */}
+          <TouchableOpacity onPress={toggleLoop}>
+            <Image
+              style={styles.buttonIcon2}
+              source={
+                isLooping
+                  ? require('../assets/repeatOn.png') // Use the repeat on icon
+                  : require('../assets/repeat.png') // Use the repeat off icon
+              }
+            />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 };
-
+const SongItem = ({ img, songName, artist, onPlay, onMore }) => {
+  return (
+    <View style={songStyles.container}>
+      <Image style={{ width: 56, height: 56 }} source={{ uri: img }} />
+      <View style={songStyles.infoContainer}>
+        <Text style={songStyles.songName}>{songName}</Text>
+        <Text style={songStyles.artist}>{artist}</Text>
+      </View>
+      <View style={songStyles.actionsContainer}>
+        <TouchableOpacity onPress={onPlay} style={songStyles.iconButton}>
+          <Text style={songStyles.icon}>🎵</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onMore} style={songStyles.iconButton}>
+          <Text style={songStyles.icon}>⋮</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+const QueueTitle = () => {
+  return (
+    <View style={titleStyles.container}>
+      <Text style={titleStyles.text}>In Queue</Text>
+    </View>
+  );
+};
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#0D0D0D',
@@ -322,5 +442,53 @@ const styles = StyleSheet.create({
     height: 24,
   },
 });
-
-export default player;
+const titleStyles = StyleSheet.create({
+  container: {
+    alignItems: 'flex-start',
+    paddingBottom: 10,
+  },
+  text: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#ffffffbf',
+    lineHeight: 24,
+    fontFamily: 'Inter',
+  },
+});
+const songStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    marginBottom: 10,
+  },
+  image: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginRight: 10,
+  },
+  infoContainer: {
+    flex: 1,
+    marginLeft: '3%',
+  },
+  songName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  artist: {
+    color: '#777',
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+  },
+  iconButton: {
+    marginLeft: 10,
+  },
+  icon: {
+    fontSize: 20,
+    color: '#fff',
+  },
+});
+export default Player;

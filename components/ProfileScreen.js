@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,49 +7,49 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import IPConfig from './IPConfig';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
-const ProfileHeader = () => {
-  return (
-    <View style={styles.header}>
-      <Text style={styles.title}>My Profile</Text>
-      <TouchableOpacity style={styles.editButton}>
-        <Image
-          source={{ uri: './assets/material-symbols-edit.svg' }}
-          style={styles.editIcon}
-        />
-        <Text style={styles.editText}>Edit</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
+import { setUser } from './Redux/UserSlice'; // Import action nếu cần
 
-const ProfileInfo = ({ users }) => {
-  if (users.length === 0) {
-    return <Text>Loading...</Text>; 
-  }
+// Header của Profile
+const ProfileHeader = () => (
+  <View style={styles.header}>
+    <Text style={styles.title}>My Profile</Text>
+    <TouchableOpacity style={styles.editButton}>
+      <Image
+        source={require('../assets/mdi-account-music-outline.png')}
+        style={styles.editIcon}
+      />
+      <Text style={styles.editText}>Edit</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+// Thông tin người dùng
+const ProfileInfo = ({ user }) => {
+  if (!user) return <Text>Loading...</Text>; // Hiển thị Loading nếu chưa có dữ liệu
 
   return (
     <View style={styles.infoContainer}>
       <View style={styles.profilePicContainer}>
         <Image
-          source={{ uri: users[0].profile.avatar }} 
+          source={{ uri: user.profile.avatar }}
           style={styles.profilePic}
         />
-        <Text style={styles.profileName}>{users[0].profile.displayName}</Text>
+        <Text style={styles.profileName}>{user.profile.displayName}</Text>
       </View>
       <View style={styles.contactDetails}>
         <Text style={styles.label}>Email</Text>
-        <Text style={styles.detail}>{users[0].email}</Text> 
+        <Text style={styles.detail}>{user.email}</Text>
         <Text style={styles.label}>Phone Number</Text>
-        <Text style={styles.detail}>{users[0].phone}</Text> 
+        <Text style={styles.detail}>{user.phone}</Text>
       </View>
     </View>
   );
 };
 
-
-const SettingsList = () => {
+// Danh sách cài đặt
+const SettingsList = ({ onLogout }) => {
   const settings = [
     { id: '1', title: 'Music Language(s)', detail: 'English, Tamil' },
     { id: '2', title: 'Streaming Quality', detail: 'HD' },
@@ -65,93 +65,78 @@ const SettingsList = () => {
           <Text style={styles.settingDetail}>{setting.detail}</Text>
         </TouchableOpacity>
       ))}
-      <TouchableOpacity style={styles.settingItem}>
-        <Text style={styles.settingText}>Connect a Device</Text>
-        <Text style={styles.settingDetail}>
-          <Image source={require('../assets/navigate_next.png')} />
-        </Text>
-      </TouchableOpacity>
       <Text style={styles.settingsTitle}>Others</Text>
-      <TouchableOpacity style={styles.settingItem}>
-        <Text style={styles.settingText}>Help & Support</Text>
-        <Text style={styles.settingDetail}>
-          <Image source={require('../assets/navigate_next.png')} />
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.settingItem}>
+      <TouchableOpacity onPress={onLogout} style={styles.settingItem}>
         <Text style={styles.settingText}>Log out</Text>
-        <Text style={styles.settingDetail}>
-          <Image source={require('../assets/navigate_next.png')} />
-        </Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-const NavigationBar = () => {
-  const items = [
-    { id: '1', name: 'Home', icon: './assets/home.svg' },
-    { id: '2', name: 'Search', icon: './assets/frame.svg' },
-    { id: '3', name: 'Your Library', icon: './assets/library-music.svg' },
-  ];
+// Thanh điều hướng
+const NavigationBar = ({ navigation }) => (
+  <View style={styles.navContainer}>
+    <TouchableOpacity
+      onPress={() => navigation.navigate('HomePlayer')}
+      style={styles.navItem}>
+      <Image
+        source={require('../assets/footerHome.png')}
+        style={styles.navIcon}
+      />
+      <Text style={styles.navText}>Home</Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+      onPress={() => navigation.navigate('SearchScreen')}
+      style={styles.navItem}>
+      <Image source={require('../assets/frame.png')} style={styles.navIcon} />
+      <Text style={styles.navText}>Search</Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+      onPress={() => navigation.navigate('YourLibrary')}
+      style={styles.navItem}>
+      <Image
+        source={require('../assets/footerLibrary.png')}
+        style={styles.navIcon}
+      />
+      <Text style={styles.navText}>Your Library</Text>
+    </TouchableOpacity>
+  </View>
+);
 
-  return (
-    <View style={styles.navContainer}>
-      {items.map((item) => (
-        <TouchableOpacity key={item.id} style={styles.navItem}>
-          <Image source={{ uri: item.icon }} style={styles.navIcon} />
-          <Text style={styles.navText}>{item.name}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-};
+// Màn hình Profile chính
 const ProfileScreen = () => {
-  const { baseUrl } = IPConfig();
+  const dispatch = useDispatch();
   const navigation = useNavigation();
-  const [users, setUsers] = useState([]);
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch(`${baseUrl}/users`);
-        const data = await response.json();
-        setUsers(data);
-        console.log(data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      }
-    };
-    fetchUsers();
-  }, [baseUrl]);
+  const user = useSelector((state) => state.user.currentUser); // Lấy dữ liệu người dùng từ Redux Store
+
+  const handleLogout = () => {
+    dispatch(setUser({ user: null, downloadedSongs: [] })); // Đặt lại dữ liệu người dùng khi đăng xuất
+    navigation.navigate('LoginScreen'); // Điều hướng về trang Home khi đăng xuất
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#0d0d0d' }}>
       <ProfileHeader />
-      <ProfileInfo users={users} />
+      <ProfileInfo user={user} />
       <ScrollView
         style={styles.container}
         showsHorizontalScrollIndicator={false}>
-        <SettingsList />
+        <SettingsList onLogout={handleLogout} />
       </ScrollView>
-      <NavigationBar />
+      <NavigationBar navigation={navigation} />
     </View>
   );
 };
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0d0d0d',
-  },
+  container: { flex: 1, backgroundColor: '#0d0d0d' },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     margin: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '500',
-    color: '#ffffffbf',
-  },
+  title: { fontSize: 24, fontWeight: '500', color: '#ffffffbf' },
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -159,25 +144,11 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRadius: 25,
   },
-  editIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 4,
-  },
-  editText: {
-    fontSize: 12,
-    color: '#000000bf',
-  },
+  editIcon: { width: 16, height: 16, marginRight: 4 },
+  editText: { fontSize: 12, color: '#000000bf' },
   infoContainer: { margin: 16 },
-  profilePicContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  profilePic: {
-    width: 88,
-    height: 88,
-    borderRadius: 50,
-  },
+  profilePicContainer: { alignItems: 'center', marginBottom: 16 },
+  profilePic: { width: 88, height: 88, borderRadius: 50 },
   profileName: {
     marginTop: 8,
     fontSize: 16,
@@ -185,16 +156,8 @@ const styles = StyleSheet.create({
     color: '#ffffffbf',
   },
   contactDetails: {},
-  label: {
-    fontSize: 16,
-    color: '#ffffffff',
-    marginBottom: 4,
-  },
-  detail: {
-    fontSize: 12,
-    color: '#ffffff80',
-    marginBottom: 16,
-  },
+  label: { fontSize: 16, color: '#ffffffff', marginBottom: 4 },
+  detail: { fontSize: 12, color: '#ffffff80', marginBottom: 16 },
   settingsContainer: { marginHorizontal: 16 },
   settingsTitle: {
     fontSize: 24,
@@ -210,14 +173,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  settingText: {
-    fontSize: 16,
-    color: '#ffffffbf',
-  },
-  settingDetail: {
-    fontSize: 12,
-    color: '#ffffffff',
-  },
+  settingText: { fontSize: 16, color: '#ffffffbf' },
+  settingDetail: { fontSize: 12, color: '#ffffffff' },
   navContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -225,19 +182,9 @@ const styles = StyleSheet.create({
     paddingTop: 5,
     paddingBottom: 10,
   },
-  navItem: {
-    alignItems: 'center',
-  },
-  navIcon: {
-    width: 24,
-    height: 24,
-    marginBottom: 4,
-  },
-  navText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#ffffffbf',
-  },
+  navItem: { alignItems: 'center' },
+  navIcon: { width: 24, height: 24, marginBottom: 4 },
+  navText: { fontSize: 10, fontWeight: '700', color: '#ffffffbf' },
 });
 
 export default ProfileScreen;
