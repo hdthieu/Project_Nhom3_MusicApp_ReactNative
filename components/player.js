@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
+  FlatList,
   Image,
   ScrollView,
   StyleSheet,
@@ -19,6 +20,7 @@ import {
 import IPConfig from './IPConfig';
 import Slider from '@react-native-community/slider';
 import { fetchArtists } from './Redux/ArtistsSlice';
+import { setLikedSongs } from './Redux/UserSlice';
 const Player = () => {
   const { baseUrl } = IPConfig();
   const dispatch = useDispatch();
@@ -27,7 +29,7 @@ const Player = () => {
   const userDownloadedSongs = useSelector(
     (state) => state.user.downloadedSongs
   );
-
+  const [inQueue, setInQueue] = useState(userDownloadedSongs); // Ban đầu là danh sách các bài hát đã tải
   const [sound, setSound] = useState();
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
@@ -36,49 +38,48 @@ const Player = () => {
   const [isShuffling, setIsShuffling] = useState(false); // State to control shuffle functionality
   const [artists, setArtists] = useState([]); // Lưu danh sách các nghệ sĩ
   const [artist, setArtist] = useState(null); // Lưu nghệ sĩ của bài hát hiện tại
-  // Function to shuffle songs
+  const currentUser = useSelector((state) => state.user.currentUser);
+  const likedSongs = useSelector((state) => state.user.likedSongs);
+
+  const [isLiked, setIsLiked] = useState(false);
+  const userId = useSelector((state) => state.user.currentUser?.id);
+
   const shuffleSongs = (songs) => {
     const shuffled = [...songs];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; // Swap elements
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
   };
 
   // Load the song
   useEffect(() => {
-    console.log('useEffect1');
     if (currentSong) {
       const audioUrl = `${baseUrl}/audio/${currentSong.id}`;
-
       const loadSong = async () => {
         if (sound) {
           await sound.stopAsync();
           await sound.unloadAsync();
         }
-
         try {
-          const { sound: newSound, status } = await Audio.Sound.createAsync(
+          const { sound: newSound } = await Audio.Sound.createAsync(
             { uri: audioUrl },
             { shouldPlay: isPlaying, isLooping }
           );
-
           setSound(newSound);
           setIsLoading(false);
 
-          // Listen for playback status updates
           newSound.setOnPlaybackStatusUpdate((status) => {
             if (status.isLoaded) {
               setCurrentTime(status.positionMillis / 1000);
               setDuration(status.durationMillis / 1000);
 
-              // Chuyển bài mới khi bài hiện tại kết thúc
               if (status.didJustFinish) {
                 if (isLooping) {
-                  newSound.replayAsync(); // Lặp lại nếu đang ở chế độ lặp
+                  newSound.replayAsync();
                 } else {
-                  handleSkip(); // Tự động chuyển bài mới khi hết bài
+                  handleSkip();
                 }
               }
             }
@@ -88,9 +89,7 @@ const Player = () => {
           setIsLoading(false);
         }
       };
-
       loadSong();
-
       return () => {
         if (sound) {
           sound.unloadAsync();
@@ -121,7 +120,6 @@ const Player = () => {
 
   // Khi chỉ có isPlaying thay đổi, sẽ kiểm soát play/pause
   useEffect(() => {
-    console.log('useEffect - Toggling play/pause');
     if (sound && !isLoading) {
       const togglePlayPause = async () => {
         try {
@@ -166,46 +164,83 @@ const Player = () => {
     }
   }, [currentSong, artists]);
 
-  // Handle skip song (shuffle or normal)
+  useEffect(() => {
+    if (currentSong && !inQueue.some((song) => song.id === currentSong.id)) {
+      setInQueue([
+        {
+          id: currentSong.id,
+          title: currentSong.title,
+          artist: currentSong.artist, // artist là một đối tượng đầy đủ
+          image: currentSong.image,
+        },
+        ...userDownloadedSongs
+          .filter((song) => song.id !== currentSong.id)
+          .map((song) => ({
+            id: song.id,
+            title: song.title,
+            artist: song.artist, // artist là đối tượng đầy đủ
+            image: song.image,
+          })),
+      ]);
+    }
+  }, [currentSong, userDownloadedSongs]);
+
+  // Skip bài hát tiếp theo
   const handleSkip = () => {
-    console.log('skip1   ', userDownloadedSongs);
-    if (isShuffling) {
-      // If shuffle is on, pick a random song
-      const shuffledSongs = shuffleSongs(userDownloadedSongs);
-      const nextSong = shuffledSongs.find((song) => song.id !== currentSong.id); // Ensure the song is different
-      dispatch(setCurrentSong(nextSong)); // Set the next shuffled song
-    } else {
-      dispatch(skipSong(userDownloadedSongs)); // Skip to the next song normally
+    const currentIndex = inQueue.findIndex(
+      (song) => song.id === currentSong.id
+    );
+
+    if (currentIndex !== -1) {
+      let nextSong;
+      if (currentIndex === inQueue.length - 1) {
+        // Nếu là bài cuối cùng, quay về bài đầu tiên
+        nextSong = inQueue[0];
+      } else {
+        // Chuyển sang bài kế tiếp
+        nextSong = inQueue[currentIndex + 1];
+      }
+      dispatch(setCurrentSong(nextSong));
+      dispatch(togglePlay(true)); // Bắt đầu phát bài mới
     }
   };
 
+  // Lui về bài hát trước
   const handlePrevious = () => {
-    if (isShuffling) {
-      // If shuffle is on, pick a random previous song
-      const shuffledSongs = shuffleSongs(userDownloadedSongs);
-      const prevSong = shuffledSongs.find((song) => song.id !== currentSong.id);
+    const currentIndex = inQueue.findIndex(
+      (song) => song.id === currentSong.id
+    );
+
+    if (currentIndex !== -1) {
+      let prevSong;
+      if (currentIndex === 0) {
+        // Nếu là bài đầu tiên, quay về bài cuối cùng
+        prevSong = inQueue[inQueue.length - 1];
+      } else {
+        // Chuyển về bài trước
+        prevSong = inQueue[currentIndex - 1];
+      }
       dispatch(setCurrentSong(prevSong));
-    } else {
-      dispatch(previousSong()); // Go back to the previous song normally
+      dispatch(togglePlay(true)); // Bắt đầu phát bài mới
     }
   };
 
   const handlePlayPause = () => {
-    dispatch(togglePlay()); // Toggle play/pause
+    dispatch(togglePlay());
   };
 
   const handleSeek = (value) => {
     if (sound) {
-      sound.setPositionAsync(value * 1000); // Set position in milliseconds
+      sound.setPositionAsync(value * 1000);
     }
   };
 
   const toggleLoop = () => {
-    setIsLooping((prevState) => !prevState); // Toggle looping state
+    setIsLooping((prevState) => !prevState);
   };
 
   const toggleShuffle = () => {
-    setIsShuffling((prevState) => !prevState); // Toggle shuffle state
+    setIsShuffling((prevState) => !prevState);
   };
 
   const formatTime = (seconds) => {
@@ -213,7 +248,87 @@ const Player = () => {
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
-  console.log('currentsong', currentSong);
+
+  useEffect(() => {
+    setIsLiked(likedSongs.includes(currentSong.id));
+  }, [likedSongs, currentSong]);
+
+  const handleLike = async () => {
+    try {
+      const response = await fetch(`${baseUrl}/users/${userId}/likedSongs`, {
+        method: isLiked ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ songId: currentSong.id }),
+      });
+
+      if (response.ok) {
+        console.log('isLiked:  ', isLiked);
+        if (isLiked) {
+          dispatch(
+            setLikedSongs(likedSongs.filter((id) => id !== currentSong.id))
+          );
+        } else {
+          dispatch(setLikedSongs([...likedSongs, currentSong.id]));
+        }
+      } else {
+        console.error('Failed to update liked songs');
+      }
+    } catch (error) {
+      console.error('Error in handleLike:', error);
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(
+        `${baseUrl}/users/${userId}/songDownloaded`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ songId: currentSong.id }),
+        }
+      );
+
+      if (response.ok) {
+        console.log('Song added to downloaded songs!');
+        await updateUserData(); // Gọi hàm làm mới dữ liệu người dùng
+      } else {
+        console.error('Failed to add song to downloaded songs');
+      }
+    } catch (error) {
+      console.error('Error in handleDownload:', error);
+    }
+  };
+
+  const updateUserData = async () => {
+    const userResponse = await fetch(`${baseUrl}/users/${userId}`);
+    const userData = await userResponse.json();
+    setUserData(userData);
+  };
+
+  const renderInQueue = () => (
+    <View>
+      <QueueTitle />
+      <FlatList
+        data={inQueue}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <SongItem
+            img={item.image}
+            songName={item.title}
+            artist={item.artist ? item.artist.name : 'Unknown Artist'}
+            onPlay={() => handlePlayFromQueue(item)}
+          />
+        )}
+      />
+    </View>
+  );
+
+  // Hàm xử lý khi phát bài hát từ hàng chờ
+  const handlePlayFromQueue = (song) => {
+    dispatch(setCurrentSong(song)); // Đặt bài hát được chọn làm currentSong
+    dispatch(togglePlay(true)); // Đảm bảo bài hát sẽ phát
+  };
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -234,10 +349,33 @@ const Player = () => {
         </View>
 
         <View style={styles.songInfo}>
-          <Text style={styles.songTitle}>{currentSong.title}</Text>
-          <Text style={styles.songArtist}>
-            {artist ? artist.name : 'Unknown Artist'}
-          </Text>
+          <View style={{ flex: 3 }}>
+            <Text style={styles.songTitle}>{currentSong.title}</Text>
+            <Text style={styles.songArtist}>
+              {artist ? artist.name : 'Unknown Artist'}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', width: '100%', flex: 1 }}>
+            <TouchableOpacity onPress={handleLike}>
+              <Image
+                style={styles.iconPlayer}
+                source={
+                  isLiked
+                    ? require('../assets/favoriteActive.png') // Hình active
+                    : require('../assets/favorite.png') // Hình bình thường
+                }
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleDownload}
+              style={{ marginLeft: '7%' }}>
+              <Image
+                style={styles.iconPlayer}
+                source={require('../assets/download-for-offline.png')}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Progress Bar */}
@@ -304,29 +442,27 @@ const Player = () => {
             />
           </TouchableOpacity>
         </View>
+        {renderInQueue()}
       </ScrollView>
     </View>
   );
 };
-const SongItem = ({ img, songName, artist, onPlay, onMore }) => {
+
+const SongItem = ({ img, songName, artist, onPlay }) => {
   return (
-    <View style={songStyles.container}>
+    <TouchableOpacity onPress={onPlay} style={songStyles.container}>
       <Image style={{ width: 56, height: 56 }} source={{ uri: img }} />
       <View style={songStyles.infoContainer}>
         <Text style={songStyles.songName}>{songName}</Text>
         <Text style={songStyles.artist}>{artist}</Text>
       </View>
       <View style={songStyles.actionsContainer}>
-        <TouchableOpacity onPress={onPlay} style={songStyles.iconButton}>
-          <Text style={songStyles.icon}>🎵</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onMore} style={songStyles.iconButton}>
-          <Text style={songStyles.icon}>⋮</Text>
-        </TouchableOpacity>
+        <Text style={songStyles.icon}>🎵</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
+
 const QueueTitle = () => {
   return (
     <View style={titleStyles.container}>
@@ -363,6 +499,8 @@ const styles = StyleSheet.create({
   songInfo: {
     alignItems: 'center',
     marginVertical: 16,
+    flexDirection: 'row',
+    flex: 1,
   },
   songTitle: {
     color: 'rgba(255, 255, 255, 0.8)',
@@ -440,6 +578,11 @@ const styles = StyleSheet.create({
   miniPlayButtonIcon: {
     width: 24,
     height: 24,
+  },
+  iconPlayer: {
+    width: 20,
+    height: 18,
+    borderRadius: 30
   },
 });
 const titleStyles = StyleSheet.create({

@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentSong } from './Redux/PlayerSlice';
 import { setLikedSongs } from './Redux/UserSlice';
 import { setDownloadedSongs } from './Redux/UserSlice';
+import { setUser } from './Redux/UserSlice'; // Import action nếu cần
 // SearchBar component
 const SearchBar = () => (
   <View style={{ flexDirection: 'row', alignItems: 'center' }}>

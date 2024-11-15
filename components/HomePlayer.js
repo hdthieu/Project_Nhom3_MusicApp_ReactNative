@@ -10,13 +10,14 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSelector, useDispatch } from 'react-redux';
 import IPConfig from './IPConfig';
-
+import { setUser } from './Redux/UserSlice'; // Import action nếu cần
 export default function HomePlayer() {
   const { baseUrl } = IPConfig();
   const navigation = useNavigation();
   const [artists, setArtists] = useState([]);
-
+  const user = useSelector((state) => state.user.currentUser);
   useEffect(() => {
     const fetchArtists = async () => {
       try {
@@ -155,8 +156,8 @@ export default function HomePlayer() {
             <TouchableOpacity
               onPress={() => navigation.navigate('ProfileScreen')}>
               <Image
-                style={{ width: 60, height: 60 }}
-                source={require('../assets/faceHome.png')}
+                style={{ width: 60, height: 60, borderRadius: 40 }}
+                source={{ uri: user.profile.avatar }}
               />
             </TouchableOpacity>
           </View>
