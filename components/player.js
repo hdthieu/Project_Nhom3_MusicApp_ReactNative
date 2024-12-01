@@ -16,20 +16,26 @@ import {
   togglePlay,
   skipSong,
   previousSong,
+  setPlaybackPosition,
 } from './Redux/PlayerSlice';
+import { toggleDropdownMini, togglePlayerVisible } from './Redux/UserSlice';
 import IPConfig from './IPConfig';
 import Slider from '@react-native-community/slider';
 import { fetchArtists } from './Redux/ArtistsSlice';
-import { setLikedSongs } from './Redux/UserSlice';
+import { setLikedSongs, setDownloadedSongs } from './Redux/UserSlice';
+import { useNavigation } from '@react-navigation/native';
 const Player = () => {
   const { baseUrl } = IPConfig();
+  const navigation = useNavigation();
   const dispatch = useDispatch();
   const currentSong = useSelector((state) => state.player.currentSong);
   const isPlaying = useSelector((state) => state.player.isPlaying);
-  const userDownloadedSongs = useSelector(
-    (state) => state.user.downloadedSongs
-  );
-  const [inQueue, setInQueue] = useState(userDownloadedSongs); // Ban đầu là danh sách các bài hát đã tải
+
+  const userDownloadedSongs = useSelector((state) => {
+    console.log(state.user); // Kiểm tra toàn bộ state.user
+    return state.user.downloadedSongs;
+  });
+  const [inQueue, setInQueue] = useState(userDownloadedSongs);
   const [sound, setSound] = useState();
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
@@ -39,11 +45,17 @@ const Player = () => {
   const [artists, setArtists] = useState([]); // Lưu danh sách các nghệ sĩ
   const [artist, setArtist] = useState(null); // Lưu nghệ sĩ của bài hát hiện tại
   const currentUser = useSelector((state) => state.user.currentUser);
-  const likedSongs = useSelector((state) => state.user.likedSongs);
+  const likedSongs = useSelector((state) => {
+    console.log("liked ",state.user);
+    return state.user.likedSongs;
+  });
 
   const [isLiked, setIsLiked] = useState(false);
   const userId = useSelector((state) => state.user.currentUser?.id);
-
+  // Check if the current song is already downloaded
+  const isDownloaded = userDownloadedSongs.some(
+    (song) => song.id === currentSong.id
+  );
   const shuffleSongs = (songs) => {
     const shuffled = [...songs];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -53,6 +65,12 @@ const Player = () => {
     return shuffled;
   };
 
+  useEffect(() => {
+    if (currentSong) {
+      // Lưu lại thời gian phát hiện tại khi chuyển đến màn hình player
+      dispatch(setPlaybackPosition(currentTime));
+    }
+  }, [currentSong]);
   // Load the song
   useEffect(() => {
     if (currentSong) {
@@ -121,21 +139,13 @@ const Player = () => {
   // Khi chỉ có isPlaying thay đổi, sẽ kiểm soát play/pause
   useEffect(() => {
     if (sound && !isLoading) {
-      const togglePlayPause = async () => {
-        try {
-          if (isPlaying) {
-            await sound.playAsync();
-          } else {
-            await sound.pauseAsync();
-          }
-        } catch (error) {
-          console.error('Error in toggling play/pause:', error);
-        }
-      };
-
-      togglePlayPause();
+      if (isPlaying) {
+        sound.playAsync();
+      } else {
+        sound.pauseAsync();
+      }
     }
-  }, [isPlaying]); // Chỉ chạy khi isPlaying thay đổi
+  }, [isPlaying, sound, isLoading]); // Chỉ chạy khi isPlaying thay đổi
 
   // load artist
   useEffect(() => {
@@ -260,6 +270,8 @@ const Player = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ songId: currentSong.id }),
       });
+      const responseText = await response.text(); // Đọc phản hồi dưới dạng text
+      console.log('Server Response:', responseText); // Log thông báo từ server
 
       if (response.ok) {
         console.log('isLiked:  ', isLiked);
@@ -271,7 +283,7 @@ const Player = () => {
           dispatch(setLikedSongs([...likedSongs, currentSong.id]));
         }
       } else {
-        console.error('Failed to update liked songs');
+        console.error('Failed to update liked songs:', responseText);
       }
     } catch (error) {
       console.error('Error in handleLike:', error);
@@ -280,23 +292,44 @@ const Player = () => {
 
   const handleDownload = async () => {
     try {
+      // Xác định phương thức (POST để thêm, DELETE để xóa)
+      const method = isDownloaded ? 'DELETE' : 'POST';
+
       const response = await fetch(
         `${baseUrl}/users/${userId}/songDownloaded`,
         {
-          method: 'POST',
+          method,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ songId: currentSong.id }),
         }
       );
 
+      const responseText = await response.text(); // Đọc phản hồi từ server dưới dạng văn bản
+      console.log('Server Response:', responseText); // Log phản hồi từ server
+
       if (response.ok) {
-        console.log('Song added to downloaded songs!');
-        await updateUserData(); // Gọi hàm làm mới dữ liệu người dùng
+        // Nếu yêu cầu thành công
+        console.log(`${isDownloaded ? 'Removed' : 'Added'} song successfully`);
+        alert(responseText); // Hiển thị thông báo từ server
+        // Cập nhật danh sách `songDownloaded`
+        if (isDownloaded) {
+          dispatch(
+            setDownloadedSongs(
+              downloadedSongs.filter((id) => id !== currentSong.id)
+            )
+          );
+        } else {
+          dispatch(setDownloadedSongs([...downloadedSongs, currentSong.id]));
+        }
+        await updateUserData(); // Cập nhật dữ liệu người dùng
       } else {
-        console.error('Failed to add song to downloaded songs');
+        // Nếu yêu cầu không thành công
+        console.error('Failed to update downloaded songs:', responseText);
+        alert(`Error: ${responseText}`); // Hiển thị thông báo lỗi từ server
       }
     } catch (error) {
-      console.error('Error in handleDownload:', error);
+      console.error('Error in handleDownload:', error); // Log lỗi chi tiết
+      alert('Error in handleDownload:', error.message); // Hiển thị thông báo lỗi
     }
   };
 
@@ -304,6 +337,17 @@ const Player = () => {
     const userResponse = await fetch(`${baseUrl}/users/${userId}`);
     const userData = await userResponse.json();
     setUserData(userData);
+    dispatch(
+      setUser({
+        user: userData.user,
+        downloadedSongs: userData.downloadedSongs,
+      })
+    );
+  };
+  const handleToggleDropdownMini = () => {
+    dispatch(toggleDropdownMini(true)); // Mở MiniPlayer
+    dispatch(togglePlayerVisible(false)); // Đóng Player
+    navigation.navigate('HomePlayer');
   };
 
   const renderInQueue = () => (
@@ -333,10 +377,12 @@ const Player = () => {
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <TouchableOpacity style={styles.topBar}>
-          <Image
-            source={require('../assets/iconDropdown.png')}
-            style={styles.icon}
-          />
+          <TouchableOpacity onPress={handleToggleDropdownMini}>
+            <Image
+              source={require('../assets/iconDropdown.png')}
+              style={styles.icon}
+            />
+          </TouchableOpacity>
           <Text style={styles.time}>12:00</Text>
           <Image
             source={require('../assets/iconBaCham.png')}
@@ -372,7 +418,11 @@ const Player = () => {
               style={{ marginLeft: '7%' }}>
               <Image
                 style={styles.iconPlayer}
-                source={require('../assets/download-for-offline.png')}
+                source={
+                  userDownloadedSongs.some((song) => song.id === currentSong.id)
+                    ? require('../assets/download-for-offline.png')
+                    : require('../assets/noDownload.png')
+                }
               />
             </TouchableOpacity>
           </View>
@@ -582,7 +632,7 @@ const styles = StyleSheet.create({
   iconPlayer: {
     width: 20,
     height: 18,
-    borderRadius: 30
+    borderRadius: 30,
   },
 });
 const titleStyles = StyleSheet.create({

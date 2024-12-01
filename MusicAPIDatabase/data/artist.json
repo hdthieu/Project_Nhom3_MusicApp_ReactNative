@@ -4,14 +4,16 @@
     "name": "Mỹ Tâm",
     "bio": "An upcoming artist known for indie music.",
     "img": "https://nld.mediacdn.vn/2019/12/9/13-tam-1-1575900876707477194550.jpg",
-    "albums": ["1", "2"]
+    "albums": ["1", "2"],
+    "trending": true
   },
   {
     "id": "2",
     "name": "Sơn Tùng MTP",
     "bio": "A popular artist with many hits.",
     "img": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRAsOnpcRy1CsKiRV9QXsEhuZwtRkqjaJQ8xA&s",
-    "albums": ["3"]
+    "albums": ["3"],
+    "trending": true
   }
   ,
   {
@@ -19,14 +21,16 @@
     "name": "Đức Phúc",
     "bio": "A popular artist with many hits.",
     "img": "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQkGaVYOw7ruA2NX7WIrbpZ5GDw5h__jLn-_SlhrNsb6xp8Ii72",
-    "albums": ["3"]
+    "albums": ["3"],
+    "trending": true
   },
   {
     "id": "4",
     "name": "Jack 5 củ",
     "bio": "A popular artist with many hits.",
     "img": "https://i.pinimg.com/736x/fa/fc/4b/fafc4b1052deae2438681e45ff7335a5.jpg",
-    "albums": ["3"]
+    "albums": ["3"],
+    "trending": true
   },
   {
     "id": "5",

@@ -1,9 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
-
 const initialState = {
-  currentUser: null, 
-  downloadedSongs: [], 
-  likedSongs: [], 
+  currentUser: {},
+  downloadedSongs: [],
+  likedSongs: [],
+  isDropdownMini: false,
+  isPlayerVisible: false, // Thêm trạng thái cho trình phát
 };
 
 const userSlice = createSlice({
@@ -11,17 +12,29 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action) => {
-      state.currentUser = action.payload.user; // Lưu thông tin người dùng
-      state.downloadedSongs = action.payload.downloadedSongs; // Lưu bài hát đã tải về
+      state.currentUser = action.payload.user;
+      state.downloadedSongs = action.payload.downloadedSongs;
     },
     setLikedSongs: (state, action) => {
-      state.likedSongs = action.payload; // Cập nhật danh sách bài hát yêu thích
+      state.likedSongs = action.payload;
     },
     setDownloadedSongs: (state, action) => {
-      state.downloadedSongs = action.payload; // Cập nhật danh sách bài hát đã tải về
+      state.downloadedSongs = action.payload;
+    },
+    toggleDropdownMini: (state) => {
+      state.isDropdownMini = !state.isDropdownMini;
+    },
+    togglePlayerVisible: (state) => {
+      state.isPlayerVisible = !state.isPlayerVisible; // Chuyển đổi trạng thái hiển thị trình phát
     },
   },
 });
 
-export const { setUser, setLikedSongs, setDownloadedSongs } = userSlice.actions;
+export const {
+  setUser,
+  setLikedSongs,
+  setDownloadedSongs,
+  toggleDropdownMini,
+  togglePlayerVisible, // Export thêm action này
+} = userSlice.actions;
 export default userSlice.reducer;

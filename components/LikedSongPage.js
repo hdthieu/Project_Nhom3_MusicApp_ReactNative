@@ -79,7 +79,7 @@ const NavigationBar = () => (
     </TouchableOpacity>
     <TouchableOpacity
       style={styles.navItem}
-      onPress={() => navigation.navigate('YourLibrary')}>
+      onPress={() => navigation.navigate('LibraryScreen')}>
       <Image
         source={require('../assets/footerLibrary.png')}
         style={styles.iconFooter}
@@ -127,7 +127,7 @@ const LikedSongPage = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('YourLibrary')}>
+        <TouchableOpacity onPress={() => navigation.navigate('LibraryScreen')}>
           <Image
             source={require('../assets/iconback.png')}
             style={styles.backIcon}

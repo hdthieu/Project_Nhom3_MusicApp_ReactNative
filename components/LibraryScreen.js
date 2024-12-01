@@ -19,7 +19,7 @@ const NavigationBar = () => {
         {/* Nút Home */}
         <TouchableOpacity
           style={{ justifyContent: 'center', alignItems: 'center' }}
-          onPress={() => navigation.navigate('Home')}>
+          onPress={() => navigation.navigate('HomePlayer')}>
           <Image source={require('../assets/footerHome.png')} />
           <Text style={navBarStyles.label}>Home</Text>
         </TouchableOpacity>
@@ -35,12 +35,12 @@ const NavigationBar = () => {
         {/* Nút Profile */}
         <TouchableOpacity
           style={{ justifyContent: 'center', alignItems: 'center' }}
-          onPress={() => navigation.navigate('Profile')}>
+          onPress={() => navigation.navigate('LibraryScreen')}>
           <Image
             style={{ color: 'white' }}
             source={require('../assets/footerLibrary.png')}
           />
-          <Text style={navBarStyles.label}>Profile</Text>
+          <Text style={navBarStyles.label}>Library</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -109,7 +109,9 @@ const CategorySection = () => {
         <Text style={categorySectionStyles.categoryCount}>210 songs</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={categorySectionStyles.categoryContainer}>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('ArtistFollowed')}
+        style={categorySectionStyles.categoryContainer}>
         <Image
           source={require('../assets/mdi-account-music-outline.png')}
           style={categorySectionStyles.icon}

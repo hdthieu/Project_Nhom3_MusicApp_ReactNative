@@ -1,11 +1,14 @@
 // Redux/artistsSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import IPConfig from '../IPConfig';
+
+const { baseUrl } = IPConfig();
 
 // Async thunk để lấy danh sách artists từ API
 export const fetchArtists = createAsyncThunk(
   'artists/fetchArtists',
   async () => {
-    const response = await fetch('/artists'); // Gọi API lấy danh sách artists
+    const response = await fetch(`${baseUrl}/artists`); // Gọi API lấy danh sách artists
     const data = await response.json();
     return data; // Trả về dữ liệu nhận được
   }

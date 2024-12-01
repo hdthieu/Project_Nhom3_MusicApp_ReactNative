@@ -88,7 +88,7 @@ const NavigationBar = ({ navigation }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate('SearchScreen')}
       style={styles.navItem}>
-      <Image source={require('../assets/frame.png')} style={styles.navIcon} />
+       <Image source={require('../assets/footerSearch.png')} />
       <Text style={styles.navText}>Search</Text>
     </TouchableOpacity>
     <TouchableOpacity

@@ -12,12 +12,19 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
 import IPConfig from './IPConfig';
-import { setUser } from './Redux/UserSlice'; // Import action nếu cần
+import MiniPlayer from './MiniPlayer';
+import SearchPage from './SearchPage';
 export default function HomePlayer() {
+  const dispatch = useDispatch();
+  const currentSong = useSelector((state) => state.player.currentSong);
+  const isDropdownMini = useSelector((state) => state.user.isDropdownMini);
+  console.log('currentSong  ', currentSong);
+  console.log('isDropdownMini  ', isDropdownMini);
   const { baseUrl } = IPConfig();
   const navigation = useNavigation();
   const [artists, setArtists] = useState([]);
   const user = useSelector((state) => state.user.currentUser);
+
   useEffect(() => {
     const fetchArtists = async () => {
       try {
@@ -44,6 +51,7 @@ export default function HomePlayer() {
     };
     navigation.navigate('Artist', { artist: songWithArtist });
   };
+
   const type = [
     {
       name: 'For You',
@@ -309,7 +317,9 @@ export default function HomePlayer() {
             </View>
           </ScrollView>
         </View>
+
         <View style={{ flex: 1 }}>
+          <View style={{ flex: 1 }}>{isDropdownMini ? <MiniPlayer /> : null}</View>
           <View style={styles.footer}>
             {/* Nút Home */}
             <TouchableOpacity
@@ -322,7 +332,7 @@ export default function HomePlayer() {
             {/* Nút Explore */}
             <TouchableOpacity
               style={{ justifyContent: 'center', alignItems: 'center' }}
-              onPress={() => navigation.navigate('Explore')}>
+              onPress={() => navigation.navigate('SearchPage')}>
               <Image source={require('../assets/footerSearch.png')} />
               <Text style={styles.label}>Explore</Text>
             </TouchableOpacity>

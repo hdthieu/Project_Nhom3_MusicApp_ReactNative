@@ -8,6 +8,41 @@ const songs = require("./data/songs.json");
 const users = require("./data/user.json"); // Thay đổi này sẽ được lưu lại trong tệp JSON
 const app = express();
 const PORT = 3000;
+function modifySongList(action) {
+  return (req, res) => {
+    const userId = req.params.userId;
+    const { songId } = req.body;
+
+    const user = users.find((u) => u.id === userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const list =
+      action === "like" ? user.profile.likedSongs : user.profile.songDownloaded;
+
+    if (req.method === "POST") {
+      if (list.includes(songId)) {
+        return res.status(400).json({ message: "Song already in list" });
+      }
+      list.push(songId);
+    } else if (req.method === "DELETE") {
+      const index = list.indexOf(songId);
+      if (index === -1) {
+        return res.status(400).json({ message: "Song not in list" });
+      }
+      list.splice(index, 1);
+    }
+
+    // Cập nhật tệp JSON
+    fs.writeFileSync("./data/user.json", JSON.stringify(users, null, 2));
+    const message =
+      req.method === "POST"
+        ? `Song added to ${action === "like" ? "liked" : "downloaded"} list`
+        : `Song removed from ${
+            action === "like" ? "liked" : "downloaded"
+          } list`;
+    res.status(200).json({ message });
+  };
+}
 
 // Sử dụng CORS để cho phép kết nối từ ứng dụng React Native
 app.use(
@@ -58,48 +93,56 @@ app.get("/user/:userId/downloaded-songs", (req, res) => {
     res.status(404).send("User not found"); // Nếu không tìm thấy người dùng
   }
 });
+app.post("/users/:userId/songDownloaded", modifySongList("download"));
+app.delete("/users/:userId/songDownloaded", modifySongList("download"));
 
-// Route để thêm bài hát vào danh sách yêu thích
-app.post("/users/:userId/likedSongs", (req, res) => {
-  const userId = req.params.userId;
-  const { songId } = req.body;
+app.post("/users/:userId/likedSongs", modifySongList("like"));
+app.delete("/users/:userId/likedSongs", modifySongList("like"));
 
-  const user = users.find((u) => u.id === userId);
-  if (!user) return res.status(404).send("User not found");
+// Route để xử lý đăng ký người dùng
+app.post("/users/signup", (req, res) => {
+  const { username, password, email, phone } = req.body;
 
-  // Kiểm tra nếu bài hát đã có trong danh sách yêu thích
-  if (user.profile.likedSongs.includes(songId)) {
-    return res.status(400).send("Song already liked");
+  const existingUser = users.find((user) => user.username === username);
+  if (existingUser) {
+    return res.status(400).json({ message: "Username already exists" });
   }
+  const newUser = {
+    id: String(users.length + 1),
+    username,
+    password,
+    email,
+    phone,
+    profile: {
+      displayName: username,
+      avatar: "default_avatar_url",
+      playlists: [],
+      likedSongs: [],
+      songDownloaded: [],
+    },
+    balance: 0,
+  };
 
-  // Thêm bài hát vào danh sách
-  user.profile.likedSongs.push(songId);
-  fs.writeFileSync("./data/user.json", JSON.stringify(users, null, 2)); // Cập nhật file JSON
-  res.status(200).send("Song added to liked songs");
+  users.push(newUser);
+  fs.writeFileSync("./data/user.json", JSON.stringify(users, null, 2));
+
+  res.status(201).json({ message: "User created successfully", user: newUser });
 });
 
-// Route để xóa bài hát khỏi danh sách yêu thích
-app.delete("/users/:userId/likedSongs", (req, res) => {
+// API trả về danh sách artist đã follow của người dùng
+app.get("/user/:userId/followed-artists", (req, res) => {
   const userId = req.params.userId;
-  const { songId } = req.body;
-
-  const user = users.find((u) => u.id === userId);
-  if (!user) return res.status(404).send("User not found");
-
-  // Kiểm tra nếu bài hát không có trong danh sách yêu thích
-  if (!user.profile.likedSongs.includes(songId)) {
-    return res.status(400).send("Song not in liked songs");
+  const user = users.find((u) => u.id === userId); 
+  if (user) {
+    const followedArtists = artists.filter((artist) =>
+      user.profile.listArtistFollowed.includes(artist.id)
+    );
+    res.json(followedArtists);
+  } else {
+    res.status(404).send("User not found");
   }
-
-  // Xóa bài hát khỏi danh sách
-  user.profile.likedSongs = user.profile.likedSongs.filter(
-    (id) => id !== songId
-  );
-  fs.writeFileSync("./data/user.json", JSON.stringify(users, null, 2)); // Cập nhật file JSON
-  res.status(200).send("Song removed from liked songs");
 });
 
-// Khởi động server
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on http://192.168.1.12:${PORT}`);
 });

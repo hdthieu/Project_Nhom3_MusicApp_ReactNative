@@ -1,7 +1,7 @@
 // Redux/store.js
 import { configureStore } from '@reduxjs/toolkit';
 import playerReducer from './PlayerSlice';
-import userReducer from './UserSlice'; 
+import userReducer from './UserSlice';
 import artistsReducer from './ArtistsSlice';
 const store = configureStore({
   reducer: {
@@ -10,5 +10,5 @@ const store = configureStore({
     artists: artistsReducer,
   },
 });
-
+console.log(store);
 export default store;
