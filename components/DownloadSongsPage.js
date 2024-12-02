@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentSong } from './Redux/PlayerSlice';
 import { setLikedSongs } from './Redux/UserSlice';
 import { setDownloadedSongs } from './Redux/UserSlice';
+
 import { setUser } from './Redux/UserSlice'; // Import action nếu cần
 // SearchBar component
 const SearchBar = () => (
@@ -94,7 +95,6 @@ const NavigationBar = () => (
 const DownloadSongsPage = () => {
   const { baseUrl } = IPConfig();
   const dispatch = useDispatch();
-
   // Thay đổi để lấy danh sách bài hát đã tải về từ Redux
   const downloadedSongs = useSelector((state) => state.user.downloadedSongs);
   const user = useSelector((state) => state.user.currentUser);

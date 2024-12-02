@@ -24,7 +24,7 @@ export default function HomePlayer() {
   const navigation = useNavigation();
   const [artists, setArtists] = useState([]);
   const user = useSelector((state) => state.user.currentUser);
-
+  const [playlist, setPlayLists] = useState([])
   useEffect(() => {
     const fetchArtists = async () => {
       try {
@@ -51,6 +51,23 @@ export default function HomePlayer() {
     };
     navigation.navigate('Artist', { artist: songWithArtist });
   };
+  const handlePlayListPress = (playlist) => {
+  navigation.navigate('PlayLists', { playlist }); 
+};
+
+  useEffect(() => {
+    const fetchPlaylist = async () => {
+      try {
+        const response = await fetch(`${baseUrl}/playlists`);
+        const data = await response.json();
+        setPlayLists(data);
+        console.log(data)
+      } catch (error) {
+        console.error('Error fetching playlists:', error);
+      }
+    };
+    fetchPlaylist();
+  }, [baseUrl]);
 
   const type = [
     {
@@ -234,6 +251,33 @@ export default function HomePlayer() {
                         { fontSize: 14, color: 'white', width: 150 },
                       ]}>
                       {item.name}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+            <View style={{ marginTop: 10 }}>
+              <Text style={[styles.styleChungTxt, { fontSize: 28 }]}>
+                Playlists
+              </Text>
+              <FlatList
+                data={playlist}
+                horizontal
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => handlePlayListPress(item)}
+                    style={{ marginHorizontal: 0, marginTop: 10 }}>
+                    <Image
+                      source={{ uri: item.playlist_img }}
+                      style={{ width: 120, height: 120, borderRadius: 5 }}
+                    />
+                    <Text
+                      style={[
+                        styles.styleChungTxt,
+                        { fontSize: 14, color: 'white', width: 150 },
+                      ]}>
+                      {item.playlist_name}
                     </Text>
                   </TouchableOpacity>
                 )}

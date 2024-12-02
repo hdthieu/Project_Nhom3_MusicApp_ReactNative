@@ -1,34 +1,42 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet,TextInput,TouchableOpacity } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchArtists } from './Redux/ArtistsSlice'; // Import action để tải dữ liệu
 import { useNavigation } from '@react-navigation/native';
+import { fetchSongs } from './Redux/SongsSlice';
 import HomePlayer from './HomePlayer';
 
-const SearchBar = () => {
+// Hàm loại bỏ dấu tiếng Việt
+const removeAccents = (str) =>
+  str
+    .normalize('NFD') // Chuẩn hóa Unicode
+    .replace(/[\u0300-\u036f]/g, '') // Loại bỏ dấu
+    .toLowerCase();
 
-  const inputRef = useRef(null);  // Tạo một reference cho TextInput
-const navigation = useNavigation();
-  // Tự động focus khi trang được hiển thị
+const SearchBar = ({ onSearch }) => {
+  const inputRef = useRef(null);
+  const navigation = useNavigation();
+
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
   }, []);
+
   return (
     <View style={styles.searchBarContainer}>
-    <TouchableOpacity onPress={() => navigation.goBack()}>
-      <Image
-        source={{ uri: 'https://dashboard.codeparrot.ai/api/assets/Z0yAA3FEV176CUhb' }}
-        style={styles.backArrow}
-      />
+      <TouchableOpacity onPress={() => navigation.goBack()}>
+        <Image
+          source={{ uri: 'https://dashboard.codeparrot.ai/api/assets/Z0yAA3FEV176CUhb' }}
+          style={styles.backArrow}
+        />
       </TouchableOpacity>
-      
       <TextInput
         style={styles.input}
         placeholder="Search songs, artist, album or playlist"
         placeholderTextColor="#ffffff40"
-        ref={inputRef}  // Gán reference cho TextInput
+        ref={inputRef}
+        onChangeText={onSearch} // Gọi callback onSearch khi nhập text
       />
     </View>
   );
@@ -38,7 +46,7 @@ const RecentSearchItem = ({ imageId, title, subtitle, onClose }) => {
   return (
     <View style={styles.recentSearchItemContainer}>
       <Image
-        source={{ uri: `https://placeholder.pics/svg?${imageId}&` }}
+        source={{ uri: `${imageId}` }}
         style={styles.recentSearchImage}
       />
       <View style={styles.textContainer}>
@@ -53,69 +61,124 @@ const RecentSearchItem = ({ imageId, title, subtitle, onClose }) => {
 };
 
 const NavigationBar = () => {
+  const navigation = useNavigation();
   return (
     <View style={styles.navigationBarContainer}>
-      <View style={styles.iconContainer}>
+      <TouchableOpacity style={styles.iconContainer} onPress={() => navigation.navigate('HomePlayer')}>
         <Image
-          source={{ uri: 'https://dashboard.codeparrot.ai/api/assets/Z0yAA3FEV176CUhc' }}
-          style={styles.icon}
+          source={require('../assets/footerHome.png')}
+          style={navigationBarStyles.icon}
+        
         />
         <Text style={styles.label}>Home</Text>
-      </View>
-      <View style={styles.iconContainer}>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.iconContainer}>
         <Image
-          source={{ uri: 'https://dashboard.codeparrot.ai/api/assets/Z0yAA3FEV176CUhd' }}
-          style={styles.icon}
+          source={require('../assets/kinhLup.png')}
+          style={navigationBarStyles.icon}
         />
         <Text style={styles.label}>Search</Text>
-      </View>
-      <View style={styles.iconContainer}>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.iconContainer}>
         <Image
-          source={{ uri: 'https://dashboard.codeparrot.ai/api/assets/Z0yAA3FEV176CUhe' }}
-          style={styles.icon}
+          source={require('../assets/footerLibrary.png')}
+          style={navigationBarStyles.icon}
         />
         <Text style={styles.label}>Your Library</Text>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };
+const navigationBarStyles = StyleSheet.create({
+ 
+  icon: {
+    width: 24,
+    height: 24,
+    marginTop: 12,
+  },
 
+});
 const Search = () => {
+  const dispatch = useDispatch();
+  const artists = useSelector((state) => state.artists.list);
+  const songs = useSelector((state) => state.songs.list);
+  const [searchResults, setSearchResults] = React.useState([]);
+  
+  useEffect(() => {
+    dispatch(fetchArtists());
+    dispatch(fetchSongs()); // Tải danh sách songs
+  }, [dispatch]);
+
+  const handleSearch = (query) => {
+    if (query.trim() === '') {
+      setSearchResults([]);
+    } else {
+      // Tìm artist có tên chứa từ khóa
+      const filteredArtists = artists.filter((artist) =>
+        removeAccents(artist.name).includes(removeAccents(query))
+      );
+
+      // Tìm song có tên hoặc artist có tên chứa từ khóa
+      const filteredSongs = songs.filter((song) => {
+        const artist = artists.find((a) => a.id === song.artistId);
+        return (
+          removeAccents(song.title).includes(removeAccents(query)) || 
+          (artist && removeAccents(artist.name).includes(removeAccents(query)))
+        );
+      });
+
+      setSearchResults({
+        artists: filteredArtists,
+        songs: filteredSongs,
+      });
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <SearchBar />
+      <SearchBar onSearch={handleSearch} />
       <ScrollView style={styles.scrollView}>
-        <Text style={styles.recentSearchesTitle}>Recent searches</Text>
-        <RecentSearchItem 
-          imageId="7:69734" 
-          title="You (feat. Travis Scott)" 
-          subtitle="Song • Don Toliver" 
-          onClose={() => console.log('Close pressed')} 
-        />
-        <RecentSearchItem 
-          imageId="7:69735" 
-          title="John Wick: Chapter 4 (Original Soundtrack)" 
-          subtitle="Album • Tyler Bates, Joel J. Richard" 
-          onClose={() => console.log('Close pressed')} 
-        />
-        <RecentSearchItem 
-          imageId="7:69736" 
-          title="Maroon 5" 
-          subtitle="Artist" 
-          onClose={() => console.log('Close pressed')} 
-        />
-        <RecentSearchItem 
-          imageId="7:69737" 
-          title="Phonk Madness" 
-          subtitle="Playlist" 
-          onClose={() => console.log('Close pressed')} 
-        />
-        <Text style={styles.clearHistory}>Clear history</Text>
+        {searchResults.artists && searchResults.artists.length > 0 && (
+          <View>
+            <Text style={styles.sectionTitle}>Artist</Text>
+            {searchResults.artists.map((artist) => (
+              <RecentSearchItem
+                key={artist.id}
+                imageId={artist.img}
+                title={artist.name}
+                subtitle={artist.bio || 'Artist'}
+                onClose={() => console.log(`Close ${artist.name}`)}
+              />
+            ))}
+          </View>
+        )}
+        {searchResults.songs && searchResults.songs.length > 0 && (
+          <View>
+            <Text style={styles.sectionTitle}>Song</Text>
+            {searchResults.songs.map((song) => {
+              const artist = artists.find((a) => a.id === song.artistId); // Tìm ca sĩ từ artistId
+              return (
+                <RecentSearchItem
+                  key={song.id}
+                  imageId={song.image}
+                  title={song.title}
+                  subtitle={`${artist ? artist.name : 'Unknown'}`} // Hiển thị tên ca sĩ
+                  onClose={() => console.log(`Close ${song.title}`)}
+                />
+              );
+            })}
+          </View>
+        )}
+        {(!searchResults.artists || searchResults.artists.length === 0) && 
+         (!searchResults.songs || searchResults.songs.length === 0) && (
+          <Text style={styles.noResultsText}>No results found</Text>
+        )}
       </ScrollView>
       <NavigationBar />
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -145,12 +208,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     paddingHorizontal: 16,
-  },
-  recentSearchesTitle: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
-    marginVertical: 16,
   },
   recentSearchItemContainer: {
     flexDirection: 'row',
@@ -187,12 +244,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
-  clearHistory: {
-    color: '#ffffff80',
-    fontSize: 14,
-    textAlign: 'right',
-    marginVertical: 16,
-  },
+  
   navigationBarContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -215,7 +267,12 @@ const styles = StyleSheet.create({
     lineHeight: 12,
     textAlign: 'center',
   },
+  sectionTitle:{
+    color:'white'
+  },
+  noResultsText:{
+    color:'white'
+  }
 });
 
 export default Search;
-

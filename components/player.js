@@ -32,10 +32,11 @@ const Player = () => {
   const isPlaying = useSelector((state) => state.player.isPlaying);
 
   const userDownloadedSongs = useSelector((state) => {
-    console.log(state.user); // Kiểm tra toàn bộ state.user
+    // console.log(state.user); // Kiểm tra toàn bộ state.user
     return state.user.downloadedSongs;
   });
   const [inQueue, setInQueue] = useState(userDownloadedSongs);
+  console.log("inqueue  " ,inQueue)
   const [sound, setSound] = useState();
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
@@ -46,7 +47,7 @@ const Player = () => {
   const [artist, setArtist] = useState(null); // Lưu nghệ sĩ của bài hát hiện tại
   const currentUser = useSelector((state) => state.user.currentUser);
   const likedSongs = useSelector((state) => {
-    console.log("liked ",state.user);
+    // console.log("liked ",state.user);
     return state.user.likedSongs;
   });
 
@@ -118,7 +119,7 @@ const Player = () => {
 
   // Khi sound được tải xong, sẽ chạy 1 lần
   useEffect(() => {
-    console.log('useEffect - Initial sound setup');
+    // console.log('useEffect - Initial sound setup');
     if (sound && !isLoading) {
       const playPauseSound = async () => {
         try {
@@ -271,10 +272,10 @@ const Player = () => {
         body: JSON.stringify({ songId: currentSong.id }),
       });
       const responseText = await response.text(); // Đọc phản hồi dưới dạng text
-      console.log('Server Response:', responseText); // Log thông báo từ server
+      // console.log('Server Response:', responseText); // Log thông báo từ server
 
       if (response.ok) {
-        console.log('isLiked:  ', isLiked);
+        // console.log('isLiked:  ', isLiked);
         if (isLiked) {
           dispatch(
             setLikedSongs(likedSongs.filter((id) => id !== currentSong.id))
@@ -305,11 +306,11 @@ const Player = () => {
       );
 
       const responseText = await response.text(); // Đọc phản hồi từ server dưới dạng văn bản
-      console.log('Server Response:', responseText); // Log phản hồi từ server
+      // console.log('Server Response:', responseText); // Log phản hồi từ server
 
       if (response.ok) {
         // Nếu yêu cầu thành công
-        console.log(`${isDownloaded ? 'Removed' : 'Added'} song successfully`);
+        // console.log(`${isDownloaded ? 'Removed' : 'Added'} song successfully`);
         alert(responseText); // Hiển thị thông báo từ server
         // Cập nhật danh sách `songDownloaded`
         if (isDownloaded) {

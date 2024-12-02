@@ -8,9 +8,9 @@ const { baseUrl } = IPConfig();
 export const fetchArtists = createAsyncThunk(
   'artists/fetchArtists',
   async () => {
-    const response = await fetch(`${baseUrl}/artists`); // Gọi API lấy danh sách artists
+    const response = await fetch(`${baseUrl}/artists`);
     const data = await response.json();
-    return data; // Trả về dữ liệu nhận được
+    return data;
   }
 );
 

@@ -56,11 +56,13 @@ const searchBarStyles = StyleSheet.create({
 });
 
 const TrendingArtists = () => {
-  
   const dispatch = useDispatch();
 
   // Lấy trạng thái từ Redux store
   const { list: artists, status, error } = useSelector((state) => state.artists);
+
+  // Lọc các nghệ sĩ đang trending
+  const trendingArtists = artists.filter((artist) => artist.trending === true);
 
   // Tự động tải dữ liệu khi component được render
   useEffect(() => {
@@ -76,24 +78,26 @@ const TrendingArtists = () => {
           source={{ uri: 'https://dashboard.codeparrot.ai/api/assets/Z0xeYHFEV176CUg8' }}
           style={trendingArtistsStyles.icon}
         />
-        <Text style={trendingArtistsStyles.title}>Trending artists</Text>
+        <Text style={trendingArtistsStyles.title}>Trending Artists</Text>
       </View>
 
       {status === 'loading' && <Text style={trendingArtistsStyles.loading}>Loading...</Text>}
       {status === 'failed' && <Text style={trendingArtistsStyles.error}>Error: {error}</Text>}
 
-      {status === 'succeeded' && (
+      {status === 'succeeded' && trendingArtists.length > 0 ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {artists.map((artist) => (
+          {trendingArtists.map((artist) => (
             <View key={artist.id} style={trendingArtistsStyles.artistContainer}>
               <Image
-                source={{ uri: artist.img }} // Thay đổi nếu ảnh nằm trong thuộc tính khác
+                source={{ uri: artist.img }}
                 style={trendingArtistsStyles.image}
               />
               <Text style={trendingArtistsStyles.name}>{artist.name}</Text>
             </View>
           ))}
         </ScrollView>
+      ) : (
+        <Text style={trendingArtistsStyles.noData}>No trending artists found.</Text>
       )}
     </View>
   );
@@ -205,13 +209,7 @@ const NavigationBar = () => {
         />
         <Text style={navigationBarStyles.label}>Home</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={navigationBarStyles.iconContainer}>
-        <Image
-          source={require('../assets/footerSearch.png')}
-          style={navigationBarStyles.icon}
-        />
-        <Text style={navigationBarStyles.label}>Search</Text>
-      </TouchableOpacity>
+      
       <TouchableOpacity style={navigationBarStyles.iconContainer}>
         <Image
           source={require('../assets/footerLibrary.png')}
