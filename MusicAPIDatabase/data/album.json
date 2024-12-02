@@ -1,0 +1,11 @@
+[
+  {
+    "id": "1",
+    "title": "Album One",
+    "artist": "1",
+    "releaseDate": "2022-01-01",
+    "genre": "Indie",
+    "songs": ["1", "2"],
+    "isPaid": false
+  }
+]

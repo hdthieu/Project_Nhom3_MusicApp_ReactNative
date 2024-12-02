@@ -1,0 +1,307 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+
+const MusicPlayer = () => {
+  return (
+    <View style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.topBar}>
+          <Image
+            source={require('./assets/iconDropdown.png')}
+            style={styles.icon}
+          />
+          <Text style={styles.time}>12:00</Text>
+          <Image
+             source={require('./assets/iconBaCham.png')}
+            style={styles.icon}
+          />
+        </View>
+
+        {/* Album Art and Title */}
+        <View style={styles.albumContainer}>
+          <Image
+            source={require('./assets/frame.png')}
+            style={styles.albumArt}
+          />
+        </View>
+
+        {/* Song Info */}
+        <View style={styles.songInfo}>
+          <View style={{ flex: 2 }}>
+            <Text style={styles.songTitle}>Inside Out</Text>
+            <Text style={styles.songArtist}>The Chainsmokers, Cha...</Text>
+          </View>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+            }}>
+            <Image source={require('./assets/iconTim.png')} />
+            <Image source={require('./assets/icondownload.png')} />
+            <Image source={require('./assets/iconshare.png')} />
+          </View>
+        </View>
+
+        {/* Controls */}
+        <View style={styles.controls}>
+          <Text style={styles.controlIcon}>⏮</Text>
+          <Text style={styles.controlIcon}>⏯</Text>
+          <Text style={styles.controlIcon}>⏭</Text>
+        </View>
+
+        {/* Current Time and Duration */}
+        <View style={styles.timeInfo}>
+          <Text style={styles.currentTime}>0:25</Text>
+          <Text style={styles.duration}>3:15</Text>
+        </View>
+
+        {/* Connect Button */}
+        <TouchableOpacity style={styles.connectButton}>
+          <Image
+            source={{ uri: 'https://placeholder.pics/svg/16x16' }}
+            style={styles.connectIcon}
+          />
+          <Text style={styles.connectText}>Connect to a device</Text>
+        </TouchableOpacity>
+        <View style={styles.upNextContainer}>
+          <Text style={styles.upNextText}>Up Next</Text>
+          <View style={styles.queueContainer}>
+            <Text style={styles.queueText}>Queue</Text>
+            <Image
+              source={{ uri: 'https://placeholder.pics/svg/24x24' }}
+              style={styles.icon}
+            />
+          </View>
+        </View>
+
+        <View style={styles.nowPlayingContainer}>
+          <Image
+            source={{ uri: 'https://placeholder.pics/svg/48x48' }}
+            style={styles.albumQueue}
+          />
+          <View style={styles.textInfo}>
+            <Text style={styles.trackTitle}>Young</Text>
+            <Text style={styles.artistName}>The Chainsmokers</Text>
+          </View>
+        </View>
+
+        <Text style={styles.similarTracksText}>Songs similar to this</Text>
+
+        <View style={styles.similarTracksContainer}>
+          {[...Array(5)].map((_, index) => (
+            <View key={index} style={styles.trackCard}>
+              <Image
+                source={{ uri: `https://placeholder.pics/svg/80x80` }}
+                style={styles.trackArt}
+              />
+              <Image
+                source={{ uri: `https://placeholder.pics/svg/24x24` }}
+                style={styles.playIcon}
+              />
+              <Text style={styles.trackName}>Track Name</Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#0D0D0D',
+    flex: 1,
+    padding: 24,
+  },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    height: 32,
+    backgroundColor: '#0000001f',
+  },
+  time: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 14,
+    fontWeight: '500',
+    fontFamily: 'Roboto',
+  },
+  icon: {
+    width: 15,
+    height: 15,
+  },
+  albumContainer: {
+    marginVertical: 16,
+    alignItems: 'center',
+  },
+  albumArt: {
+    width: 312,
+    height: 312,
+    borderRadius: 16,
+  },
+  lyrics: {
+    marginTop: 12,
+    color: 'black',
+    textAlign: 'center',
+    fontWeight: '700',
+    position: 'absolute',
+    padding: 20,
+    fontSize: 16,
+    top: '75%',
+  },
+  songInfo: {
+    alignItems: 'center',
+    marginVertical: 16,
+    flexDirection: 'row',
+  },
+  songTitle: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  songArtist: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 16,
+  },
+  controls: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 16,
+  },
+  controlIcon: {
+    fontSize: 24,
+    color: 'white',
+  },
+  timeInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  currentTime: {
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  duration: {
+    color: 'rgba(255, 255, 255, 0.5)',
+  },
+  connectButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff14',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 25,
+    marginVertical: 16,
+  },
+  connectIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
+  },
+  connectText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  upNextContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  upNextText: {
+    color: '#ffffff40',
+    fontSize: 20,
+    fontWeight: '500',
+    lineHeight: 24,
+    fontFamily: 'Inter',
+  },
+  queueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  queueText: {
+    color: '#ffffffbf',
+    fontSize: 20,
+    fontWeight: '500',
+    lineHeight: 24,
+    fontFamily: 'Inter',
+  },
+
+  nowPlayingContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#ffffff14',
+    borderRadius: 8,
+    marginTop: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  textInfo: {
+    marginLeft: 16,
+  },
+  albumQueue: {
+    width: 48,
+    height: 48,
+  },
+
+  trackTitle: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '500',
+    lineHeight: 20,
+    fontFamily: 'Inter',
+  },
+  artistName: {
+    color: '#ffffff80',
+    fontSize: 16,
+    fontWeight: '500',
+    lineHeight: 20,
+    fontFamily: 'Inter',
+    marginTop: 4,
+  },
+  similarTracksText: {
+    color: '#ffffffbf',
+    fontSize: 20,
+    fontWeight: '500',
+    lineHeight: 24,
+    fontFamily: 'Inter',
+    marginTop: 40,
+  },
+  similarTracksContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    marginTop: 16,
+  },
+  trackCard: {
+    width: 80,
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  trackArt: {
+    width: 80,
+    height: 80,
+  },
+  playIcon: {
+    width: 24,
+    height: 24,
+    position: 'absolute',
+    top: 48,
+    left: 28,
+  },
+  trackName: {
+    color: '#ffffffbf',
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 14,
+    fontFamily: 'Inter',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+});
+
+export default MusicPlayer;

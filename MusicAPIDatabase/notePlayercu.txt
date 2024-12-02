@@ -1,0 +1,71 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, Button } from 'react-native';
+import { Audio } from 'expo-av';
+
+const App = () => {
+  const [songs, setSongs] = useState([]);
+  const [currentSound, setCurrentSound] = useState(null);
+
+  useEffect(() => {
+    const fetchSongs = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/songs'); // Địa chỉ API của bạn
+        const data = await response.json();
+        setSongs(data);
+      } catch (error) {
+        console.error("Error fetching songs:", error);
+      }
+    };
+
+    fetchSongs();
+  }, []);
+
+  const playAudio = async (songId) => {
+    try {
+      // Tạo URL để phát bài hát
+      const audioUrl = `http://localhost:3000/audio/${songId}`;
+      
+      // Dừng âm thanh hiện tại nếu có
+      if (currentSound) {
+        await currentSound.stopAsync();
+        await currentSound.unloadAsync();
+      }
+
+      // Tải và phát âm thanh
+      const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
+      setCurrentSound(sound);
+      await sound.playAsync();
+    } catch (error) {
+      console.error("Error playing sound:", error);
+    }
+  };
+
+  const stopAudio = async () => {
+    if (currentSound) {
+      await currentSound.stopAsync();
+      await currentSound.unloadAsync();
+      setCurrentSound(null);
+    }
+  };
+
+  return (
+    <View style={{ padding: 20 }}>
+      <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Audio Player</Text>
+      <FlatList
+        data={songs}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={{ marginVertical: 10 }}>
+            <Text style={{ fontSize: 18 }}>{item.title} - {item.artist}</Text>
+            <View style={{ flexDirection: 'row', marginTop: 10 }}>
+              <Button title="Play" onPress={() => playAudio(item.id)} />
+              <Button title="Stop" onPress={stopAudio} color="red" />
+            </View>
+          </View>
+        )}
+      />
+    </View>
+  );
+};
+
+export default App;
