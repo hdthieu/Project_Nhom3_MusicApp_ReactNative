@@ -1,5 +1,6 @@
+* Viết trên expo Web kết nối với database tự tạo local config theo IP của Internet
 - Github: 
-  https://github.com/hdthieu/Project_Nhom3_MusicApp_ReactNative/tree/main
+  https://github.com/hdthieu/Project_Nhom3_MusicApp_ReactNative/tree/Hieu
 - Jira: 
   https://hoductrihieu.atlassian.net/jira/software/projects/MFLP/boards/1/timeline
 - Figma
