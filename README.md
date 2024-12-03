@@ -1,11 +1,9 @@
-# Sample Snack app
+- Github: 
+  https://github.com/hdthieu/Project_Nhom3_MusicApp_ReactNative/tree/main
+- Jira: 
+  https://hoductrihieu.atlassian.net/jira/software/projects/MFLP/boards/1/timeline
+- Figma
+  https://www.figma.com/design/YaTVIAMYDoByfI0xMoDz6a/Nhom3_MusicApp?node-id=0-1&node-type=canvas&t=VT1PDTpN5lYEzSXl-0
+- Link document
+  https://docs.google.com/document/d/1OiLR39HA34tTAvdee0NrRyRUIz3pdnUFOWUSzTCuHcs/edit?tab=t.0
 
-Open the `App.js` file to start writing some code. You can preview the changes directly on your phone or tablet by scanning the **QR code** or use the iOS or Android emulators. When you're done, click **Save** and share the link!
-
-When you're ready to see everything that Expo provides (or if you want to use your own editor) you can **Download** your project and use it with [expo cli](https://docs.expo.dev/get-started/installation/#expo-cli)).
-
-All projects created in Snack are publicly available, so you can easily share the link to this project via link, or embed it on a web page with the `<>` button.
-
-If you're having problems, you can tweet to us [@expo](https://twitter.com/expo) or ask in our [forums](https://forums.expo.dev/c/expo-dev-tools/61) or [Discord](https://chat.expo.dev/).
-
-Snack is Open Source. You can find the code on the [GitHub repo](https://github.com/expo/snack).
